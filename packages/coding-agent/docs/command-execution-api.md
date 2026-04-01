@@ -73,7 +73,9 @@ This is enough to let remote-control extensions do:
 - execute `/new` without smuggling command context
 - execute `/compact ...`
 - execute `/name ...`
-- execute extension commands and prompt/skill slash commands when available
+- execute extension-defined commands without smuggling command context
+
+Prompt-template and skill slash commands can be layered in later once command routing is unified further.
 
 ## likely implementation shape
 

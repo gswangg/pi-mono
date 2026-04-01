@@ -48,6 +48,7 @@ export type {
 	EditToolResultEvent,
 	ExecOptions,
 	ExecResult,
+	ExecuteCommandHandler,
 	Extension,
 	ExtensionActions,
 	// API

@@ -45,6 +45,7 @@ import { exportSessionToHtml, type ToolHtmlRenderer } from "./export-html/index.
 import { createToolHtmlRenderer } from "./export-html/tool-renderer.js";
 import {
 	type ContextUsage,
+	type ExecuteCommandHandler,
 	type ExtensionCommandContextActions,
 	type ExtensionErrorListener,
 	ExtensionRunner,
@@ -166,6 +167,7 @@ export interface AgentSessionConfig {
 export interface ExtensionBindings {
 	uiContext?: ExtensionUIContext;
 	commandContextActions?: ExtensionCommandContextActions;
+	executeCommand?: ExecuteCommandHandler;
 	shutdownHandler?: ShutdownHandler;
 	onError?: ExtensionErrorListener;
 }
@@ -280,6 +282,7 @@ export class AgentSession {
 	private _sessionStartEvent: SessionStartEvent;
 	private _extensionUIContext?: ExtensionUIContext;
 	private _extensionCommandContextActions?: ExtensionCommandContextActions;
+	private _extensionExecuteCommand?: ExecuteCommandHandler;
 	private _extensionShutdownHandler?: ShutdownHandler;
 	private _extensionErrorListener?: ExtensionErrorListener;
 	private _extensionErrorUnsubscriber?: () => void;
@@ -2011,6 +2014,9 @@ export class AgentSession {
 		if (bindings.commandContextActions !== undefined) {
 			this._extensionCommandContextActions = bindings.commandContextActions;
 		}
+		if (bindings.executeCommand !== undefined) {
+			this._extensionExecuteCommand = bindings.executeCommand;
+		}
 		if (bindings.shutdownHandler !== undefined) {
 			this._extensionShutdownHandler = bindings.shutdownHandler;
 		}
@@ -2148,6 +2154,7 @@ export class AgentSession {
 						});
 					});
 				},
+				executeCommand: async (commandLine) => this.executeCommand(commandLine),
 				appendEntry: (customType, data) => {
 					this.sessionManager.appendCustomEntry(customType, data);
 				},
@@ -2347,6 +2354,21 @@ export class AgentSession {
 		});
 	}
 
+	async executeCommand(commandLine: string): Promise<boolean> {
+		if (!commandLine.startsWith("/")) {
+			throw new Error("Commands must start with '/'");
+		}
+
+		if (this._extensionExecuteCommand) {
+			const handled = await this._extensionExecuteCommand(commandLine);
+			if (handled) {
+				return true;
+			}
+		}
+
+		return await this._tryExecuteExtensionCommand(commandLine);
+	}
+
 	async reload(): Promise<void> {
 		const previousFlagValues = this._extensionRunner?.getFlagValues();
 		await this._extensionRunner?.emit({ type: "session_shutdown" });
@@ -2362,6 +2384,7 @@ export class AgentSession {
 		const hasBindings =
 			this._extensionUIContext ||
 			this._extensionCommandContextActions ||
+			this._extensionExecuteCommand ||
 			this._extensionShutdownHandler ||
 			this._extensionErrorListener;
 		if (this._extensionRunner && hasBindings) {

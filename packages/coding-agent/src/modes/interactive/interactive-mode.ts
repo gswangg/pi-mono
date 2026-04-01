@@ -96,6 +96,7 @@ import { ToolExecutionComponent } from "./components/tool-execution.js";
 import { TreeSelectorComponent } from "./components/tree-selector.js";
 import { UserMessageComponent } from "./components/user-message.js";
 import { UserMessageSelectorComponent } from "./components/user-message-selector.js";
+import { tryHandleInteractiveCommand } from "./execute-command.js";
 import {
 	getAvailableThemes,
 	getAvailableThemesWithPaths,
@@ -1169,6 +1170,9 @@ export class InteractiveMode {
 		const uiContext = this.createExtensionUIContext();
 		await this.session.bindExtensions({
 			uiContext,
+			executeCommand: async (commandLine) => {
+				return await this.executeCommand(commandLine, { source: "extension" });
+			},
 			commandContextActions: {
 				waitForIdle: () => this.session.agent.waitForIdle(),
 				newSession: async (options) => {
@@ -2070,122 +2074,59 @@ export class InteractiveMode {
 		}
 	}
 
+	private async executeCommand(
+		text: string,
+		options?: { clearEditor?: boolean; source?: "interactive" | "extension" },
+	): Promise<boolean> {
+		const clearEditor = () => {
+			if (options?.clearEditor) {
+				this.editor.setText("");
+			}
+		};
+
+		const handled = await tryHandleInteractiveCommand(text, {
+			clearEditor,
+			showSettingsSelector: () => this.showSettingsSelector(),
+			showModelsSelector: () => this.showModelsSelector(),
+			handleModelCommand: (searchTerm) => this.handleModelCommand(searchTerm),
+			handleExportCommand: (commandText) => this.handleExportCommand(commandText),
+			handleImportCommand: (commandText) => this.handleImportCommand(commandText),
+			handleShareCommand: () => this.handleShareCommand(),
+			handleCopyCommand: () => this.handleCopyCommand(),
+			handleNameCommand: (commandText) => this.handleNameCommand(commandText),
+			handleSessionCommand: () => this.handleSessionCommand(),
+			handleChangelogCommand: () => this.handleChangelogCommand(),
+			handleHotkeysCommand: () => this.handleHotkeysCommand(),
+			showUserMessageSelector: () => this.showUserMessageSelector(),
+			showTreeSelector: () => this.showTreeSelector(),
+			showOAuthSelector: (mode) => this.showOAuthSelector(mode),
+			handleClearCommand: () => this.handleClearCommand(),
+			handleCompactCommand: (customInstructions) => this.handleCompactCommand(customInstructions),
+			handleReloadCommand: () => this.handleReloadCommand(),
+			handleDebugCommand: () => this.handleDebugCommand(),
+			handleArminSaysHi: () => this.handleArminSaysHi(),
+			showSessionSelector: () => this.showSessionSelector(),
+			shutdown: () => this.shutdown(),
+		});
+		if (handled) {
+			return true;
+		}
+
+		if (!this.isExtensionCommand(text)) {
+			return false;
+		}
+
+		clearEditor();
+		await this.session.prompt(text, { source: options?.source ?? "interactive" });
+		return true;
+	}
+
 	private setupEditorSubmitHandler(): void {
 		this.defaultEditor.onSubmit = async (text: string) => {
 			text = text.trim();
 			if (!text) return;
 
-			// Handle commands
-			if (text === "/settings") {
-				this.showSettingsSelector();
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/scoped-models") {
-				this.editor.setText("");
-				await this.showModelsSelector();
-				return;
-			}
-			if (text === "/model" || text.startsWith("/model ")) {
-				const searchTerm = text.startsWith("/model ") ? text.slice(7).trim() : undefined;
-				this.editor.setText("");
-				await this.handleModelCommand(searchTerm);
-				return;
-			}
-			if (text.startsWith("/export")) {
-				await this.handleExportCommand(text);
-				this.editor.setText("");
-				return;
-			}
-			if (text.startsWith("/import")) {
-				await this.handleImportCommand(text);
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/share") {
-				await this.handleShareCommand();
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/copy") {
-				await this.handleCopyCommand();
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/name" || text.startsWith("/name ")) {
-				this.handleNameCommand(text);
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/session") {
-				this.handleSessionCommand();
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/changelog") {
-				this.handleChangelogCommand();
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/hotkeys") {
-				this.handleHotkeysCommand();
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/fork") {
-				this.showUserMessageSelector();
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/tree") {
-				this.showTreeSelector();
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/login") {
-				this.showOAuthSelector("login");
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/logout") {
-				this.showOAuthSelector("logout");
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/new") {
-				this.editor.setText("");
-				await this.handleClearCommand();
-				return;
-			}
-			if (text === "/compact" || text.startsWith("/compact ")) {
-				const customInstructions = text.startsWith("/compact ") ? text.slice(9).trim() : undefined;
-				this.editor.setText("");
-				await this.handleCompactCommand(customInstructions);
-				return;
-			}
-			if (text === "/reload") {
-				this.editor.setText("");
-				await this.handleReloadCommand();
-				return;
-			}
-			if (text === "/debug") {
-				this.handleDebugCommand();
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/arminsayshi") {
-				this.handleArminSaysHi();
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/resume") {
-				this.showSessionSelector();
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/quit") {
-				this.editor.setText("");
-				await this.shutdown();
+			if (text.startsWith("/") && (await this.executeCommand(text, { clearEditor: true, source: "interactive" }))) {
 				return;
 			}
 
