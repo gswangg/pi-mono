@@ -2,83 +2,145 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Updated `antigravity-image-gen.ts` example extension to use User-Agent version `1.21.9` ([#2901](https://github.com/badlogic/pi-mono/pull/2901) by [@aadishv](https://github.com/aadishv))
+### Added
+
+- Set `PI_CODING_AGENT=true` environment variable at startup so sub-processes can detect they are running inside the coding agent ([#2868](https://github.com/badlogic/pi-mono/issues/2868))
+
+## [0.66.1] - 2026-04-08
+
+### Changed
+
+- Changed the Earendil announcement from an automatic startup notice to the hidden `/dementedelves` slash command.
+
+## [0.66.0] - 2026-04-08
+
+### New Features
+
+- Earendil startup announcement with bundled inline image rendering and a linked blog post for April 8 and 9, 2026.
+- Interactive Anthropic subscription auth warning when Anthropic subscription auth is active, clarifying that Anthropic third-party usage draws from extra usage and is billed per token.
+
+### Fixed
+
+- Fixed bare `readline` import to use `node:readline` prefix for Deno compatibility ([#2885](https://github.com/badlogic/pi-mono/issues/2885) by [@milosv-vtool](https://github.com/milosv-vtool))
+- Fixed auto-retry to treat stream failures like `request ended without sending any chunks` as transient errors ([#2892](https://github.com/badlogic/pi-mono/issues/2892))
+- Fixed interactive startup notices to render after the initial resource listing, and added a bundled Earendil startup announcement with inline image rendering for April 8 and 9, 2026. Moved the blog link above the image to avoid overlap with terminal image rendering.
+- Fixed interactive mode to warn when Anthropic subscription auth is active, so users know Anthropic third-party usage draws from extra usage and is billed per token.
+
+## [0.65.2] - 2026-04-06
+
+## [0.65.1] - 2026-04-05
+
+### Fixed
+
+- Fixed bash output truncation by line count to always persist full output to a temp file, preventing data loss when output exceeds 2000 lines but stays under the byte threshold ([#2852](https://github.com/badlogic/pi-mono/issues/2852))
+- RpcClient now forwards subprocess stderr to parent process in real-time ([#2805](https://github.com/badlogic/pi-mono/issues/2805))
+- Theme file watcher now handles async `fs.watch` error events instead of crashing the process ([#2791](https://github.com/badlogic/pi-mono/issues/2791))
+- Fixed stored session cwd handling so resuming or importing a session whose original working directory no longer exists now prompts interactive users to continue in the current cwd, while non-interactive modes fail with a clear error.
+- Fixed resource collision precedence so project and user skills, prompt templates, and themes override package resources consistently, and CLI-provided paths take precedence over discovered resources ([#2781](https://github.com/badlogic/pi-mono/issues/2781))
+- Fixed OpenAI-compatible completions streaming usage accounting to preserve `prompt_tokens_details.cache_write_tokens` and normalize OpenRouter `cached_tokens`, preventing incorrect cache read/write token and cost reporting in pi ([#2802](https://github.com/badlogic/pi-mono/issues/2802))
+- Fixed CLI extension paths like `git:gist.github.com/...` being incorrectly resolved against cwd instead of being passed through to the package manager ([#2845](https://github.com/badlogic/pi-mono/pull/2845) by [@aliou](https://github.com/aliou))
+- Fixed piped stdin runs with `--mode json` to preserve JSONL output instead of falling back to plain text ([#2848](https://github.com/badlogic/pi-mono/pull/2848) by [@aliou](https://github.com/aliou))
+- Fixed interactive command docs to stop listing removed `/exit` as a supported quit command ([#2850](https://github.com/badlogic/pi-mono/issues/2850))
+
+## [0.65.0] - 2026-04-03
+
+### New Features
+
+- **Session runtime API**: `createAgentSessionRuntime()` and `AgentSessionRuntime` provide a closure-based runtime that recreates cwd-bound services and session config on every session switch. Startup, `/new`, `/resume`, `/fork`, and import all use the same creation path. See [docs/sdk.md](docs/sdk.md) and [examples/sdk/13-session-runtime.ts](examples/sdk/13-session-runtime.ts).
+- **Label timestamps in `/tree`**: Toggle timestamps on tree entries with `Shift+T`, with smart date formatting and timestamp preservation through branching ([#2691](https://github.com/badlogic/pi-mono/pull/2691) by [@w-winter](https://github.com/w-winter))
+- **`defineTool()` helper**: Create standalone custom tool definitions with full TypeScript parameter type inference, no manual casts needed ([#2746](https://github.com/badlogic/pi-mono/issues/2746)). See [docs/extensions.md](docs/extensions.md).
+- **Unified diagnostics**: Arg parsing, service creation, session option resolution, and resource loading all return structured diagnostics (`info`/`warning`/`error`) instead of logging or exiting. The app layer decides presentation and exit behavior.
+
 ### Breaking Changes
 
-- Removed extension post-transition events `session_switch` and `session_fork`. Extensions should now use `session_start` and inspect `event.reason`, which is now one of `"startup" | "reload" | "new" | "resume" | "fork"`. For `"new"`, `"resume"`, and `"fork"`, `session_start` also includes `previousSessionFile`. This is better because session replacement now fully reloads extensions, so one post-start hook with explicit reason matches the real lifecycle better than two extra non-cancellable post-transition events.
-- Removed session-replacement methods from `AgentSession`. Use `AgentSessionRuntimeHost` for `newSession()`, `switchSession()`, `fork()`, and `importFromJsonl()`. This is better because cross-cwd session replacement rebuilds cwd-bound runtime state and can replace the live `AgentSession` instance entirely. Keeping those operations on a stable runtime host matches the real lifecycle and avoids pretending one `AgentSession` mutates into another.
+- Removed extension post-transition events `session_switch` and `session_fork`. Use `session_start` with `event.reason` (`"startup" | "reload" | "new" | "resume" | "fork"`). For `"new"`, `"resume"`, and `"fork"`, `session_start` includes `previousSessionFile`.
+- Removed session-replacement methods from `AgentSession`. Use `AgentSessionRuntime` for `newSession()`, `switchSession()`, `fork()`, and `importFromJsonl()`. Cross-cwd session replacement rebuilds all cwd-bound runtime state and replaces the live `AgentSession` instance.
+- Removed `session_directory` from extension and settings APIs.
+- Unknown single-dash CLI flags (e.g. `-s`) now produce an error instead of being silently ignored.
 
-#### Migration Notes
-
-For existing extensions:
+#### Migration: Extensions
 
 Before:
 
 ```ts
-pi.on("session_switch", async (event, ctx) => {
-  if (event.reason === "new") {
-    resetState();
-  }
-});
-
-pi.on("session_fork", async (_event, ctx) => {
-  reconstructState(ctx);
-});
+pi.on("session_switch", async (event, ctx) => { ... });
+pi.on("session_fork", async (_event, ctx) => { ... });
 ```
 
 After:
 
 ```ts
 pi.on("session_start", async (event, ctx) => {
-  if (event.reason === "new") {
-    resetState();
-  }
-
-  if (event.reason === "fork" || event.reason === "resume" || event.reason === "startup") {
-    reconstructState(ctx);
-  }
+  // event.reason: "startup" | "reload" | "new" | "resume" | "fork"
+  // event.previousSessionFile: set for "new", "resume", "fork"
 });
 ```
 
-For existing SDK integrations:
+#### Migration: SDK session replacement
 
 Before:
 
 ```ts
 await session.newSession();
 await session.switchSession("/path/to/session.jsonl");
-await session.fork("entry-id");
-await session.importFromJsonl(jsonl);
 ```
 
 After:
 
 ```ts
-const runtime = await createAgentSessionRuntime(bootstrap, {
+import {
+  type CreateAgentSessionRuntimeFactory,
+  createAgentSessionFromServices,
+  createAgentSessionRuntime,
+  createAgentSessionServices,
+  getAgentDir,
+  SessionManager,
+} from "@mariozechner/pi-coding-agent";
+
+const createRuntime: CreateAgentSessionRuntimeFactory = async ({ cwd, sessionManager, sessionStartEvent }) => {
+  const services = await createAgentSessionServices({ cwd });
+  return {
+    ...(await createAgentSessionFromServices({ services, sessionManager, sessionStartEvent })),
+    services,
+    diagnostics: services.diagnostics,
+  };
+};
+
+const runtime = await createAgentSessionRuntime(createRuntime, {
   cwd: process.cwd(),
+  agentDir: getAgentDir(),
   sessionManager: SessionManager.create(process.cwd()),
 });
-const runtimeHost = new AgentSessionRuntimeHost(bootstrap, runtime);
 
-await runtimeHost.newSession();
-await runtimeHost.switchSession("/path/to/session.jsonl");
-await runtimeHost.fork("entry-id");
-await runtimeHost.importFromJsonl(jsonl);
+await runtime.newSession();
+await runtime.switchSession("/path/to/session.jsonl");
+await runtime.fork("entry-id");
 
-const session = runtimeHost.session;
+// After replacement, runtime.session is the new live session.
+// Rebind any session-local subscriptions or extension bindings.
 ```
-
-After runtime replacement, use `runtimeHost.session` as the new live session and rebind any session-local subscriptions or extension bindings.
 
 ### Added
 
-- Added `pi.executeCommand(commandLine)` so extensions can invoke mode-provided slash commands without smuggling `ExtensionCommandContext`, with interactive-mode support for built-ins and fallback support for extension commands
+- Added `pi.executeCommand(commandLine)` so extensions can invoke mode-provided slash commands without smuggling `ExtensionCommandContext`, with interactive-mode support for built-ins and extension commands
 - Added public SDK runtime-host exports `createAgentSessionRuntime()` and `AgentSessionRuntimeHost` for apps that need runtime-backed session replacement and mode-style session switching
+- Added `createAgentSessionRuntime()` and `AgentSessionRuntime` for runtime-backed session replacement. The runtime takes a `CreateAgentSessionRuntimeFactory` closure that closes over process-global fixed inputs and recreates cwd-bound services and session config for each effective cwd. Startup and later `/new`, `/resume`, `/fork`, import all use the same factory.
+- Added unified diagnostics model (`info`/`warning`/`error`) for arg parsing, service creation, session option resolution, and resource loading. Creation logic no longer logs or exits. The app layer decides presentation and exit behavior.
+- Added error diagnostics for missing explicit CLI resource paths (`-e`, `--skill`, `--prompt-template`, `--theme`)
+- Added `defineTool()` so standalone and array-based custom tool definitions keep inferred parameter types without manual casts ([#2746](https://github.com/badlogic/pi-mono/issues/2746))
 
 - Added label timestamps to the session tree with a `Shift+T` toggle in `/tree`, smart date formatting, and timestamp preservation through branching ([#2691](https://github.com/badlogic/pi-mono/pull/2691) by [@w-winter](https://github.com/w-winter))
 
 ### Fixed
 
+- Fixed startup resource loading to reuse the initial `ResourceLoader` for the first runtime, so extensions are not loaded twice before session startup and `session_start` handlers still fire for singleton-style extensions ([#2766](https://github.com/badlogic/pi-mono/issues/2766))
+- Fixed retry settlement so retried agent runs wait for the full retry cycle to complete before declaring idle, preventing stale state after transient errors
 - Fixed theme `export` colors to resolve theme variables the same way as `colors`, so `/export` HTML backgrounds now honor entries like `pageBg: "base"` instead of requiring inline hex values ([#2707](https://github.com/badlogic/pi-mono/issues/2707))
+- Fixed Bedrock throttling errors being misidentified as context overflow, causing unnecessary compaction instead of retry ([#2699](https://github.com/badlogic/pi-mono/pull/2699) by [@xu0o0](https://github.com/xu0o0))
+- Added tool streaming support for newer Z.ai models ([#2732](https://github.com/badlogic/pi-mono/pull/2732) by [@kaofelix](https://github.com/kaofelix))
 
 ## [0.64.0] - 2026-03-29
 

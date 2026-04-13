@@ -47,7 +47,7 @@ import {
 	VERSION,
 } from "../../config.js";
 import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "../../core/agent-session.js";
-import type { AgentSessionRuntimeHost } from "../../core/agent-session-runtime.js";
+import type { AgentSessionRuntime } from "../../core/agent-session-runtime.js";
 import type {
 	ExtensionContext,
 	ExtensionRunner,
@@ -61,6 +61,7 @@ import { createCompactionSummaryMessage } from "../../core/messages.js";
 import { findExactModelReferenceMatch, resolveModelScope } from "../../core/model-resolver.js";
 import { DefaultPackageManager } from "../../core/package-manager.js";
 import type { ResourceDiagnostic } from "../../core/resource-loader.js";
+import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "../../core/session-cwd.js";
 import { type SessionContext, SessionManager } from "../../core/session-manager.js";
 import { BUILTIN_SLASH_COMMANDS } from "../../core/slash-commands.js";
 import type { SourceInfo } from "../../core/source-info.js";
@@ -80,6 +81,7 @@ import { CustomEditor } from "./components/custom-editor.js";
 import { CustomMessageComponent } from "./components/custom-message.js";
 import { DaxnutsComponent } from "./components/daxnuts.js";
 import { DynamicBorder } from "./components/dynamic-border.js";
+import { EarendilAnnouncementComponent } from "./components/earendil-announcement.js";
 import { ExtensionEditorComponent } from "./components/extension-editor.js";
 import { ExtensionInputComponent } from "./components/extension-input.js";
 import { ExtensionSelectorComponent } from "./components/extension-selector.js";
@@ -108,6 +110,7 @@ import {
 	setRegisteredThemes,
 	setTheme,
 	setThemeInstance,
+	stopThemeWatcher,
 	Theme,
 	type ThemeColor,
 	theme,
@@ -126,6 +129,13 @@ type CompactionQueuedMessage = {
 	text: string;
 	mode: "steer" | "followUp";
 };
+
+const ANTHROPIC_SUBSCRIPTION_AUTH_WARNING =
+	"Anthropic subscription auth is active. Third-party usage now draws from extra usage and is billed per token, not your Claude plan limits. Manage extra usage at https://claude.ai/settings/usage.";
+
+function isAnthropicSubscriptionAuthKey(apiKey: string | undefined): boolean {
+	return typeof apiKey === "string" && apiKey.startsWith("sk-ant-oat");
+}
 
 /**
  * Options for InteractiveMode initialization.
@@ -146,7 +156,7 @@ export interface InteractiveModeOptions {
 }
 
 export class InteractiveMode {
-	private runtimeHost: AgentSessionRuntimeHost;
+	private runtimeHost: AgentSessionRuntime;
 	private ui: TUI;
 	private chatContainer: Container;
 	private pendingMessagesContainer: Container;
@@ -172,6 +182,8 @@ export class InteractiveMode {
 	private lastSigintTime = 0;
 	private lastEscapeTime = 0;
 	private changelogMarkdown: string | undefined = undefined;
+	private startupNoticesShown = false;
+	private anthropicSubscriptionWarningShown = false;
 
 	// Status line tracking (for mutating immediately-sequential status updates)
 	private lastStatusSpacer: Spacer | undefined = undefined;
@@ -258,7 +270,7 @@ export class InteractiveMode {
 	}
 
 	constructor(
-		runtimeHost: AgentSessionRuntimeHost,
+		runtimeHost: AgentSessionRuntime,
 		private options: InteractiveModeOptions = {},
 	) {
 		this.runtimeHost = runtimeHost;
@@ -426,6 +438,36 @@ export class InteractiveMode {
 		}
 	}
 
+	private showStartupNoticesIfNeeded(): void {
+		if (this.startupNoticesShown) {
+			return;
+		}
+		this.startupNoticesShown = true;
+
+		if (!this.changelogMarkdown) {
+			return;
+		}
+
+		if (this.chatContainer.children.length > 0) {
+			this.chatContainer.addChild(new Spacer(1));
+		}
+		this.chatContainer.addChild(new DynamicBorder());
+		if (this.settingsManager.getCollapseChangelog()) {
+			const versionMatch = this.changelogMarkdown.match(/##\s+\[?(\d+\.\d+\.\d+)\]?/);
+			const latestVersion = versionMatch ? versionMatch[1] : this.version;
+			const condensedText = `Updated to v${latestVersion}. Use ${theme.bold("/changelog")} to view full changelog.`;
+			this.chatContainer.addChild(new Text(condensedText, 1, 0));
+		} else {
+			this.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", "What's New")), 1, 0));
+			this.chatContainer.addChild(new Spacer(1));
+			this.chatContainer.addChild(
+				new Markdown(this.changelogMarkdown.trim(), 1, 0, this.getMarkdownThemeWithSettings()),
+			);
+			this.chatContainer.addChild(new Spacer(1));
+		}
+		this.chatContainer.addChild(new DynamicBorder());
+	}
+
 	async init(): Promise<void> {
 		if (this.isInitialized) return;
 
@@ -478,37 +520,10 @@ export class InteractiveMode {
 			this.headerContainer.addChild(new Spacer(1));
 			this.headerContainer.addChild(this.builtInHeader);
 			this.headerContainer.addChild(new Spacer(1));
-
-			// Add changelog if provided
-			if (this.changelogMarkdown) {
-				this.headerContainer.addChild(new DynamicBorder());
-				if (this.settingsManager.getCollapseChangelog()) {
-					const versionMatch = this.changelogMarkdown.match(/##\s+\[?(\d+\.\d+\.\d+)\]?/);
-					const latestVersion = versionMatch ? versionMatch[1] : this.version;
-					const condensedText = `Updated to v${latestVersion}. Use ${theme.bold("/changelog")} to view full changelog.`;
-					this.headerContainer.addChild(new Text(condensedText, 1, 0));
-				} else {
-					this.headerContainer.addChild(new Text(theme.bold(theme.fg("accent", "What's New")), 1, 0));
-					this.headerContainer.addChild(new Spacer(1));
-					this.headerContainer.addChild(
-						new Markdown(this.changelogMarkdown.trim(), 1, 0, this.getMarkdownThemeWithSettings()),
-					);
-					this.headerContainer.addChild(new Spacer(1));
-				}
-				this.headerContainer.addChild(new DynamicBorder());
-			}
 		} else {
 			// Minimal header when silenced
 			this.builtInHeader = new Text("", 0, 0);
 			this.headerContainer.addChild(this.builtInHeader);
-			if (this.changelogMarkdown) {
-				// Still show changelog notification even in silent mode
-				this.headerContainer.addChild(new Spacer(1));
-				const versionMatch = this.changelogMarkdown.match(/##\s+\[?(\d+\.\d+\.\d+)\]?/);
-				const latestVersion = versionMatch ? versionMatch[1] : this.version;
-				const condensedText = `Updated to v${latestVersion}. Use ${theme.bold("/changelog")} to view full changelog.`;
-				this.headerContainer.addChild(new Text(condensedText, 1, 0));
-			}
 		}
 
 		this.ui.addChild(this.chatContainer);
@@ -612,6 +627,8 @@ export class InteractiveMode {
 		if (modelFallbackMessage) {
 			this.showWarning(modelFallbackMessage);
 		}
+
+		void this.maybeWarnAboutAnthropicSubscriptionAuth();
 
 		// Process initial messages
 		if (initialMessage) {
@@ -1181,23 +1198,31 @@ export class InteractiveMode {
 						this.loadingAnimation = undefined;
 					}
 					this.statusContainer.clear();
-					const result = await this.runtimeHost.newSession(options);
-					if (!result.cancelled) {
-						await this.handleRuntimeSessionChange();
-						this.renderCurrentSessionState();
-						this.ui.requestRender();
+					try {
+						const result = await this.runtimeHost.newSession(options);
+						if (!result.cancelled) {
+							await this.handleRuntimeSessionChange();
+							this.renderCurrentSessionState();
+							this.ui.requestRender();
+						}
+						return result;
+					} catch (error: unknown) {
+						return this.handleFatalRuntimeError("Failed to create session", error);
 					}
-					return result;
 				},
 				fork: async (entryId) => {
-					const result = await this.runtimeHost.fork(entryId);
-					if (!result.cancelled) {
-						await this.handleRuntimeSessionChange();
-						this.renderCurrentSessionState();
-						this.editor.setText(result.selectedText ?? "");
-						this.showStatus("Forked to new session");
+					try {
+						const result = await this.runtimeHost.fork(entryId);
+						if (!result.cancelled) {
+							await this.handleRuntimeSessionChange();
+							this.renderCurrentSessionState();
+							this.editor.setText(result.selectedText ?? "");
+							this.showStatus("Forked to new session");
+						}
+						return { cancelled: result.cancelled };
+					} catch (error: unknown) {
+						return this.handleFatalRuntimeError("Failed to fork session", error);
 					}
-					return { cancelled: result.cancelled };
 				},
 				navigateTree: async (targetId, options) => {
 					const result = await this.session.navigateTree(targetId, {
@@ -1243,11 +1268,13 @@ export class InteractiveMode {
 		const extensionRunner = this.session.extensionRunner;
 		if (!extensionRunner) {
 			this.showLoadedResources({ extensions: [], force: false });
+			this.showStartupNoticesIfNeeded();
 			return;
 		}
 
 		this.setupExtensionShortcuts(extensionRunner);
 		this.showLoadedResources({ force: false });
+		this.showStartupNoticesIfNeeded();
 	}
 
 	private applyRuntimeSettings(): void {
@@ -1277,6 +1304,14 @@ export class InteractiveMode {
 		await this.updateAvailableProviderCount();
 		this.updateEditorBorderColor();
 		this.updateTerminalTitle();
+	}
+
+	private async handleFatalRuntimeError(prefix: string, error: unknown): Promise<never> {
+		const message = error instanceof Error ? error.message : String(error);
+		this.showError(`${prefix}: ${message}`);
+		stopThemeWatcher();
+		this.stop();
+		process.exit(1);
 	}
 
 	private renderCurrentSessionState(): void {
@@ -1706,6 +1741,14 @@ export class InteractiveMode {
 		return result === "Yes";
 	}
 
+	private async promptForMissingSessionCwd(error: MissingSessionCwdError): Promise<string | undefined> {
+		const confirmed = await this.showExtensionConfirm(
+			"Session cwd not found",
+			formatMissingSessionCwdPrompt(error.issue),
+		);
+		return confirmed ? error.issue.fallbackCwd : undefined;
+	}
+
 	/**
 	 * Show a text input for extensions.
 	 */
@@ -2105,6 +2148,7 @@ export class InteractiveMode {
 			handleReloadCommand: () => this.handleReloadCommand(),
 			handleDebugCommand: () => this.handleDebugCommand(),
 			handleArminSaysHi: () => this.handleArminSaysHi(),
+			handleDementedDelves: () => this.handleDementedDelves(),
 			showSessionSelector: () => this.showSessionSelector(),
 			shutdown: () => this.shutdown(),
 		});
@@ -2876,6 +2920,7 @@ export class InteractiveMode {
 				const thinkingStr =
 					result.model.reasoning && result.thinkingLevel !== "off" ? ` (thinking: ${result.thinkingLevel})` : "";
 				this.showStatus(`Switched to ${result.model.name || result.model.id}${thinkingStr}`);
+				void this.maybeWarnAboutAnthropicSubscriptionAuth(result.model);
 			}
 		} catch (error) {
 			this.showError(error instanceof Error ? error.message : String(error));
@@ -3372,6 +3417,7 @@ export class InteractiveMode {
 				this.footer.invalidate();
 				this.updateEditorBorderColor();
 				this.showStatus(`Model: ${model.id}`);
+				void this.maybeWarnAboutAnthropicSubscriptionAuth(model);
 				this.checkDaxnutsEasterEgg(model);
 			} catch (error) {
 				this.showError(error instanceof Error ? error.message : String(error));
@@ -3407,6 +3453,35 @@ export class InteractiveMode {
 		this.footerDataProvider.setAvailableProviderCount(uniqueProviders.size);
 	}
 
+	private async maybeWarnAboutAnthropicSubscriptionAuth(
+		model: Model<any> | undefined = this.session.model,
+	): Promise<void> {
+		if (this.anthropicSubscriptionWarningShown) {
+			return;
+		}
+		if (!model || model.provider !== "anthropic") {
+			return;
+		}
+
+		const storedCredential = this.session.modelRegistry.authStorage.get("anthropic");
+		if (storedCredential?.type === "oauth") {
+			this.anthropicSubscriptionWarningShown = true;
+			this.showWarning(ANTHROPIC_SUBSCRIPTION_AUTH_WARNING);
+			return;
+		}
+
+		try {
+			const apiKey = await this.session.modelRegistry.getApiKeyForProvider(model.provider);
+			if (!isAnthropicSubscriptionAuthKey(apiKey)) {
+				return;
+			}
+			this.anthropicSubscriptionWarningShown = true;
+			this.showWarning(ANTHROPIC_SUBSCRIPTION_AUTH_WARNING);
+		} catch {
+			// Ignore auth lookup failures for warning-only checks.
+		}
+	}
+
 	private showModelSelector(initialSearchInput?: string): void {
 		this.showSelector((done) => {
 			const selector = new ModelSelectorComponent(
@@ -3422,6 +3497,7 @@ export class InteractiveMode {
 						this.updateEditorBorderColor();
 						done();
 						this.showStatus(`Model: ${model.id}`);
+						void this.maybeWarnAboutAnthropicSubscriptionAuth(model);
 						this.checkDaxnutsEasterEgg(model);
 					} catch (error) {
 						done();
@@ -3758,13 +3834,32 @@ export class InteractiveMode {
 			this.loadingAnimation = undefined;
 		}
 		this.statusContainer.clear();
-		const result = await this.runtimeHost.switchSession(sessionPath);
-		if (result.cancelled) {
-			return;
+		try {
+			const result = await this.runtimeHost.switchSession(sessionPath);
+			if (result.cancelled) {
+				return;
+			}
+			await this.handleRuntimeSessionChange();
+			this.renderCurrentSessionState();
+			this.showStatus("Resumed session");
+		} catch (error: unknown) {
+			if (error instanceof MissingSessionCwdError) {
+				const selectedCwd = await this.promptForMissingSessionCwd(error);
+				if (!selectedCwd) {
+					this.showStatus("Resume cancelled");
+					return;
+				}
+				const result = await this.runtimeHost.switchSession(sessionPath, selectedCwd);
+				if (result.cancelled) {
+					return;
+				}
+				await this.handleRuntimeSessionChange();
+				this.renderCurrentSessionState();
+				this.showStatus("Resumed session in current cwd");
+				return;
+			}
+			await this.handleFatalRuntimeError("Failed to resume session", error);
 		}
-		await this.handleRuntimeSessionChange();
-		this.renderCurrentSessionState();
-		this.showStatus("Resumed session");
 	}
 
 	private async showOAuthSelector(mode: "login" | "logout"): Promise<void> {
@@ -4029,7 +4124,23 @@ export class InteractiveMode {
 			this.renderCurrentSessionState();
 			this.showStatus(`Session imported from: ${inputPath}`);
 		} catch (error: unknown) {
-			this.showError(`Failed to import session: ${error instanceof Error ? error.message : "Unknown error"}`);
+			if (error instanceof MissingSessionCwdError) {
+				const selectedCwd = await this.promptForMissingSessionCwd(error);
+				if (!selectedCwd) {
+					this.showStatus("Import cancelled");
+					return;
+				}
+				const result = await this.runtimeHost.importFromJsonl(inputPath, selectedCwd);
+				if (result.cancelled) {
+					this.showStatus("Import cancelled");
+					return;
+				}
+				await this.handleRuntimeSessionChange();
+				this.renderCurrentSessionState();
+				this.showStatus(`Session imported from: ${inputPath}`);
+				return;
+			}
+			await this.handleFatalRuntimeError("Failed to import session", error);
 		}
 	}
 
@@ -4373,15 +4484,19 @@ export class InteractiveMode {
 			this.loadingAnimation = undefined;
 		}
 		this.statusContainer.clear();
-		const result = await this.runtimeHost.newSession();
-		if (result.cancelled) {
-			return;
+		try {
+			const result = await this.runtimeHost.newSession();
+			if (result.cancelled) {
+				return;
+			}
+			await this.handleRuntimeSessionChange();
+			this.renderCurrentSessionState();
+			this.chatContainer.addChild(new Spacer(1));
+			this.chatContainer.addChild(new Text(`${theme.fg("accent", "✓ New session started")}`, 1, 1));
+			this.ui.requestRender();
+		} catch (error: unknown) {
+			await this.handleFatalRuntimeError("Failed to create session", error);
 		}
-		await this.handleRuntimeSessionChange();
-		this.renderCurrentSessionState();
-		this.chatContainer.addChild(new Spacer(1));
-		this.chatContainer.addChild(new Text(`${theme.fg("accent", "✓ New session started")}`, 1, 1));
-		this.ui.requestRender();
 	}
 
 	private handleDebugCommand(): void {
@@ -4420,6 +4535,12 @@ export class InteractiveMode {
 	private handleArminSaysHi(): void {
 		this.chatContainer.addChild(new Spacer(1));
 		this.chatContainer.addChild(new ArminComponent(this.ui));
+		this.ui.requestRender();
+	}
+
+	private handleDementedDelves(): void {
+		this.chatContainer.addChild(new Spacer(1));
+		this.chatContainer.addChild(new EarendilAnnouncementComponent());
 		this.ui.requestRender();
 	}
 

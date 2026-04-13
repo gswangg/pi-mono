@@ -117,9 +117,6 @@ export type {
 	SessionBeforeTreeEvent,
 	SessionBeforeTreeResult,
 	SessionCompactEvent,
-	SessionDirectoryEvent,
-	SessionDirectoryHandler,
-	SessionDirectoryResult,
 	SessionEvent,
 	SessionShutdownEvent,
 	// Events - Session
@@ -155,6 +152,7 @@ export type {
 } from "./types.js";
 // Type guards
 export {
+	defineTool,
 	isBashToolResult,
 	isEditToolResult,
 	isFindToolResult,
