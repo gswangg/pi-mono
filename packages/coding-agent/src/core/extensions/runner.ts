@@ -252,6 +252,8 @@ export class ExtensionRunner {
 		this.runtime.sendMessage = actions.sendMessage;
 		this.runtime.sendUserMessage = actions.sendUserMessage;
 		this.runtime.executeCommand = actions.executeCommand;
+		this.runtime.submitSkill = actions.submitSkill;
+		this.runtime.expandSkillCommand = actions.expandSkillCommand;
 		this.runtime.appendEntry = actions.appendEntry;
 		this.runtime.setSessionName = actions.setSessionName;
 		this.runtime.getSessionName = actions.getSessionName;

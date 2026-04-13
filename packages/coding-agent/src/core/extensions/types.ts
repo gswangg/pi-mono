@@ -1089,8 +1089,14 @@ export interface ExtensionAPI {
 		options?: { deliverAs?: "steer" | "followUp" },
 	): void;
 
-	/** Execute a slash command through pi's command dispatcher. Returns false if the command is unsupported in the current mode or session. */
+	/** Execute a built-in or extension slash command through pi's command dispatcher. Returns false if the command is unknown in the current mode or session. */
 	executeCommand(commandLine: string): Promise<boolean>;
+
+	/** Submit a /skill:name invocation through the same queue-aware path used by interactive slash input. Returns false if the skill command is unknown. */
+	submitSkill(commandLine: string): Promise<boolean>;
+
+	/** Expand a /skill:name invocation into the exact prompt text pi would submit, or return undefined when the skill is unknown. */
+	expandSkillCommand(commandLine: string): string | undefined;
 
 	/** Append a custom entry to the session for state persistence (not sent to LLM). */
 	appendEntry<T = unknown>(customType: string, data?: T): void;
@@ -1315,6 +1321,10 @@ export type AppendEntryHandler = <T = unknown>(customType: string, data?: T) => 
 
 export type ExecuteCommandHandler = (commandLine: string) => Promise<boolean>;
 
+export type SubmitSkillHandler = (commandLine: string) => Promise<boolean>;
+
+export type ExpandSkillCommandHandler = (commandLine: string) => string | undefined;
+
 export type SetSessionNameHandler = (name: string) => void;
 
 export type GetSessionNameHandler = () => string | undefined;
@@ -1368,6 +1378,8 @@ export interface ExtensionActions {
 	sendMessage: SendMessageHandler;
 	sendUserMessage: SendUserMessageHandler;
 	executeCommand: ExecuteCommandHandler;
+	submitSkill: SubmitSkillHandler;
+	expandSkillCommand: ExpandSkillCommandHandler;
 	appendEntry: AppendEntryHandler;
 	setSessionName: SetSessionNameHandler;
 	getSessionName: GetSessionNameHandler;

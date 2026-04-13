@@ -99,6 +99,7 @@ import { TreeSelectorComponent } from "./components/tree-selector.js";
 import { UserMessageComponent } from "./components/user-message.js";
 import { UserMessageSelectorComponent } from "./components/user-message-selector.js";
 import { tryHandleInteractiveCommand } from "./execute-command.js";
+import { trySubmitInteractiveSkill } from "./submit-skill.js";
 import {
 	getAvailableThemes,
 	getAvailableThemesWithPaths,
@@ -1190,6 +1191,9 @@ export class InteractiveMode {
 			executeCommand: async (commandLine) => {
 				return await this.executeCommand(commandLine, { source: "extension" });
 			},
+			submitSkill: async (commandLine) => {
+				return await this.submitSkill(commandLine, { source: "extension" });
+			},
 			commandContextActions: {
 				waitForIdle: () => this.session.agent.waitForIdle(),
 				newSession: async (options) => {
@@ -2163,6 +2167,29 @@ export class InteractiveMode {
 		clearEditor();
 		await this.session.prompt(text, { source: options?.source ?? "interactive" });
 		return true;
+	}
+
+	private async submitSkill(text: string, options?: { source?: "interactive" | "extension" }): Promise<boolean> {
+		return await trySubmitInteractiveSkill(
+			text,
+			{
+				isStreaming: this.session.isStreaming,
+				isCompacting: this.session.isCompacting,
+				isKnownSkillCommand: (commandLine) => this.isKnownSkillCommand(commandLine),
+			},
+			{
+				submitPrompt: async (commandLine, promptOptions) => {
+					await this.session.prompt(commandLine, {
+						source: promptOptions?.source,
+						streamingBehavior: promptOptions?.streamingBehavior,
+					});
+				},
+				queueCompactionMessage: (commandLine, mode) => this.queueCompactionMessage(commandLine, mode),
+				updatePendingMessagesDisplay: () => this.updatePendingMessagesDisplay(),
+				requestRender: () => this.ui.requestRender(),
+			},
+			options,
+		);
 	}
 
 	private setupEditorSubmitHandler(): void {
@@ -3161,6 +3188,10 @@ export class InteractiveMode {
 		const spaceIndex = text.indexOf(" ");
 		const commandName = spaceIndex === -1 ? text.slice(1) : text.slice(1, spaceIndex);
 		return !!extensionRunner.getCommand(commandName);
+	}
+
+	private isKnownSkillCommand(text: string): boolean {
+		return this.session.expandSkillCommand(text) !== undefined;
 	}
 
 	private async flushCompactionQueue(options?: { willRetry?: boolean }): Promise<void> {

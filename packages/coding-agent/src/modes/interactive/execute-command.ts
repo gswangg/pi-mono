@@ -19,6 +19,7 @@ export interface InteractiveCommandHandlers {
 	handleReloadCommand(): Promise<void>;
 	handleDebugCommand(): void;
 	handleArminSaysHi(): void;
+	handleDementedDelves(): void;
 	showSessionSelector(): void;
 	shutdown(): Promise<void>;
 }
@@ -126,6 +127,11 @@ export async function tryHandleInteractiveCommand(
 	}
 	if (text === "/arminsayshi") {
 		handlers.handleArminSaysHi();
+		handlers.clearEditor();
+		return true;
+	}
+	if (text === "/dementedelves") {
+		handlers.handleDementedDelves();
 		handlers.clearEditor();
 		return true;
 	}

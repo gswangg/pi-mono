@@ -10,13 +10,13 @@ import type { ExtensionActions, ExtensionAPI, ExtensionContextActions } from "..
 import { ModelRegistry } from "../src/core/model-registry.js";
 import { SessionManager } from "../src/core/session-manager.js";
 
-describe("ExtensionAPI.executeCommand", () => {
+describe("ExtensionAPI skill helpers", () => {
 	let tempDir: string;
 	let sessionManager: SessionManager;
 	let modelRegistry: ModelRegistry;
 
 	beforeEach(() => {
-		tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "pi-execute-command-test-"));
+		tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "pi-submit-skill-test-"));
 		sessionManager = SessionManager.inMemory();
 		const authStorage = AuthStorage.create(path.join(tempDir, "auth.json"));
 		modelRegistry = ModelRegistry.create(authStorage);
@@ -26,7 +26,7 @@ describe("ExtensionAPI.executeCommand", () => {
 		fs.rmSync(tempDir, { recursive: true, force: true });
 	});
 
-	it("delegates to the bound executeCommand action", async () => {
+	it("delegates submitSkill and expandSkillCommand to bound runtime actions", async () => {
 		const runtime = createExtensionRuntime();
 		let api: ExtensionAPI | undefined;
 		const extension = await loadExtensionFromFactory(
@@ -38,14 +38,19 @@ describe("ExtensionAPI.executeCommand", () => {
 			runtime,
 		);
 		const runner = new ExtensionRunner([extension], runtime, tempDir, sessionManager, modelRegistry);
-		const executeCommand = vi.fn(async (commandLine: string) => commandLine === "/reload");
+		const submitSkill = vi.fn(async (commandLine: string) => commandLine === "/skill:debug logs");
+		const expandSkillCommand = vi.fn((commandLine: string) =>
+			commandLine === "/skill:debug logs"
+				? '<skill name="debug" location="/tmp/debug/SKILL.md">\nReferences are relative to /tmp/debug.\n\nbody\n</skill>\n\nlogs'
+				: undefined,
+		);
 
 		const actions: ExtensionActions = {
 			sendMessage: () => {},
 			sendUserMessage: () => {},
-			executeCommand,
-			submitSkill: async () => false,
-			expandSkillCommand: () => undefined,
+			executeCommand: async () => false,
+			submitSkill,
+			expandSkillCommand,
 			appendEntry: () => {},
 			setSessionName: () => {},
 			getSessionName: () => undefined,
@@ -74,10 +79,10 @@ describe("ExtensionAPI.executeCommand", () => {
 		runner.bindCore(actions, contextActions);
 
 		expect(api).toBeDefined();
-		await expect(api!.executeCommand("/reload")).resolves.toBe(true);
-		expect(executeCommand).toHaveBeenCalledWith("/reload");
-
-		await expect(api!.executeCommand("/unknown")).resolves.toBe(false);
-		expect(executeCommand).toHaveBeenCalledWith("/unknown");
+		await expect(api!.submitSkill("/skill:debug logs")).resolves.toBe(true);
+		expect(submitSkill).toHaveBeenCalledWith("/skill:debug logs");
+		expect(api!.expandSkillCommand("/skill:debug logs")).toContain('<skill name="debug"');
+		expect(expandSkillCommand).toHaveBeenCalledWith("/skill:debug logs");
+		await expect(api!.submitSkill("/skill:missing")).resolves.toBe(false);
 	});
 });

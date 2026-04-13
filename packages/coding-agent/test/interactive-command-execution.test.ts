@@ -68,6 +68,9 @@ function createHandlers(): InteractiveCommandHandlers & { calls: string[] } {
 		handleArminSaysHi: vi.fn(() => {
 			calls.push("handleArminSaysHi");
 		}),
+		handleDementedDelves: vi.fn(() => {
+			calls.push("handleDementedDelves");
+		}),
 		showSessionSelector: vi.fn(() => {
 			calls.push("showSessionSelector");
 		}),

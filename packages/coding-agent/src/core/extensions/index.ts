@@ -49,6 +49,7 @@ export type {
 	ExecOptions,
 	ExecResult,
 	ExecuteCommandHandler,
+	ExpandSkillCommandHandler,
 	Extension,
 	ExtensionActions,
 	// API
@@ -126,6 +127,7 @@ export type {
 	SetLabelHandler,
 	SetModelHandler,
 	SetThinkingLevelHandler,
+	SubmitSkillHandler,
 	TerminalInputHandler,
 	// Events - Tool
 	ToolCallEvent,

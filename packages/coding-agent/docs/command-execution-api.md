@@ -1,4 +1,4 @@
-# Command Execution API for Extensions
+# Slash Control APIs for Extensions
 
 ## problem
 
@@ -6,89 +6,104 @@ Extensions can already:
 - send chat messages via `pi.sendUserMessage()`
 - run session lifecycle actions from command handlers via `ExtensionCommandContext`
 
-That leaves a gap for extensions that need to initiate slash commands programmatically from event handlers, tools, background tasks, or external control bridges.
+That still leaves a gap for extensions that need to drive slash-driven control flow from event handlers, tools, background tasks, or external bridges.
 
-Current workarounds are bad:
+The bad workarounds were:
 - `pi.sendUserMessage("/reload")` sends chat input, but does not execute built-in slash commands
 - capturing an `ExtensionCommandContext` from some unrelated command handler is brittle and mode-specific
-- reimplementing command behavior inside each extension duplicates core logic and drifts from pi behavior
+- reimplementing command and skill behavior inside each extension drifts from pi
 
-Remote-control bridges are the clearest example. They need an explicit control-plane API for commands like:
-- `/reload`
-- `/new`
-- `/compact`
-- `/name`
-- extension-defined commands
-- skill/template slash commands
+Remote-control bridges are the clearest example. They need:
+- strict command execution for built-ins and extension commands
+- queue-aware `/skill:name` submission that behaves like local interactive slash input
 
 ## goals
 
-Add a first-class extension API for slash command execution that:
-- uses the same command path as real user-entered slash commands
-- does not require a captured `ExtensionCommandContext`
-- keeps built-in command semantics owned by pi
-- is explicit about command execution vs chat-message injection
-- is available from normal extension code, not only command handlers
+Add first-class extension APIs that:
+- reuse pi-owned slash behavior instead of extension-local copies
+- keep commands and skills as separate concepts
+- preserve interactive-mode queueing semantics for skills
+- stay explicit about command execution vs prompt submission
+- are available from normal extension code, not only command handlers
 
 ## non-goals
 
-Not in the first step:
-- generic queuing of slash commands while streaming
-- converting arbitrary plain text into prompts through the same API
-- making every mode support every interactive-only UI command
+Not in this step:
+- prompt-template execution through the command API
+- arbitrary slash-text emulation
+- generic command queueing while streaming
+- making every mode support interactive-only UI commands
 - changing normal editor submission behavior
 
-## proposed api
-
-Add a new extension API method:
+## api
 
 ```ts
 await pi.executeCommand("/reload")
 await pi.executeCommand("/compact focus on recent edits")
 await pi.executeCommand("/name remote session")
+
+const expanded = pi.expandSkillCommand("/skill:debug logs")
+await pi.submitSkill("/skill:debug logs")
 ```
 
-Initial semantics:
+### `pi.executeCommand(commandLine)`
+
+Scope:
+- built-in interactive slash commands
+- extension-defined commands
+
+Semantics:
 - input must start with `/`
-- executes a slash command through pi's command dispatcher
-- returns `true` when the command was recognized and executed
-- returns `false` when the command is unknown in the current mode/session
-- may throw when execution is invalid in the current state (for example, if a command requires idle state)
+- returns `true` when the command name is recognized and dispatched
+- returns `false` when the slash input is not a built-in or extension command in the current mode/session
+- does **not** fall back to prompt templates, skills, or plain prompt submission
 
-## scope for initial implementation
+### `pi.expandSkillCommand(commandLine)`
 
-### extension api surface
-- add `pi.executeCommand(commandLine: string): Promise<boolean>`
-- wire it through the shared extension runtime
+Scope:
+- `/skill:name ...` only
 
-### command dispatch
-- expose a reusable slash-command execution path in interactive mode instead of keeping built-ins only inside editor submit handling
-- support the same slash commands already available to a user typing into the editor
-- preserve existing behavior for normal editor submission
+Semantics:
+- input must be a known skill invocation
+- returns the exact expanded prompt text pi would submit for that skill
+- returns `undefined` when the skill is unknown
+- useful for bridges that need echo-suppression parity with the eventual expanded local user message
 
-### immediate use case
+### `pi.submitSkill(commandLine)`
 
-This is enough to let remote-control extensions do:
-- execute `/reload` without smuggling command context
-- execute `/new` without smuggling command context
-- execute `/compact ...`
-- execute `/name ...`
-- execute extension-defined commands without smuggling command context
+Scope:
+- `/skill:name ...` only
 
-Prompt-template and skill slash commands can be layered in later once command routing is unified further.
+Semantics:
+- returns `true` when the skill exists and was accepted for submission
+- returns `false` when the skill is unknown
+- in interactive mode, mirrors local typed-input behavior:
+  - idle: submits immediately
+  - streaming: queues as `steer`
+  - compacting: queues for after compaction
+- does **not** execute built-ins, extension commands, prompt templates, or arbitrary slash text
 
-## likely implementation shape
+## implementation shape
 
-1. factor interactive-mode slash-command handling into a reusable method
-2. add an extension runtime action that delegates to that method
-3. bind the new action during `session.bindExtensions(...)`
-4. keep editor submit using the same helper so behavior stays aligned
-5. later, decide whether RPC/print should support the same API fully or return `false` for unsupported interactive commands
+1. keep interactive built-in command dispatch in a reusable helper
+2. expose a separate queue-aware interactive skill-submission helper
+3. bind both through `session.bindExtensions(...)`
+4. keep editor submit using the same built-in command helper and existing prompt path
+5. let bridges compose the two APIs explicitly:
+   - `executeCommand()` for commands
+   - `expandSkillCommand()` + `submitSkill()` for skills
+
+## immediate use case
+
+This is enough to let remote-control extensions do the honest thing:
+- execute `/reload`, `/new`, `/compact`, `/name`, and extension commands without smuggling command context
+- submit `/skill:name ...` with the same streaming/compaction semantics as local interactive input
+- avoid treating prompt templates or arbitrary slash text as commands
 
 ## future follow-ups
 
-Potential step 2 work after the minimal API lands:
-- queued command execution while streaming (`steer` / `followUp` semantics for commands)
-- a lower-level `AgentSession.executeCommand()` / SDK surface
-- richer result types (`handled`, `cancelled`, `reason`)
-- unifying command routing across interactive, RPC, and print modes
+Potential later work:
+- richer result types for command rejection reasons
+- a lower-level SDK surface for slash control
+- unifying slash discoverability across interactive, RPC, and bridge surfaces
+- deciding whether prompt templates deserve their own explicit submission API

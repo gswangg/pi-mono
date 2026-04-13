@@ -58,6 +58,7 @@ import {
 	type SessionBeforeTreeResult,
 	type SessionStartEvent,
 	type ShutdownHandler,
+	type SubmitSkillHandler,
 	type ToolDefinition,
 	type ToolExecutionEndEvent,
 	type ToolExecutionStartEvent,
@@ -168,6 +169,7 @@ export interface ExtensionBindings {
 	uiContext?: ExtensionUIContext;
 	commandContextActions?: ExtensionCommandContextActions;
 	executeCommand?: ExecuteCommandHandler;
+	submitSkill?: SubmitSkillHandler;
 	shutdownHandler?: ShutdownHandler;
 	onError?: ExtensionErrorListener;
 }
@@ -283,6 +285,7 @@ export class AgentSession {
 	private _extensionUIContext?: ExtensionUIContext;
 	private _extensionCommandContextActions?: ExtensionCommandContextActions;
 	private _extensionExecuteCommand?: ExecuteCommandHandler;
+	private _extensionSubmitSkill?: SubmitSkillHandler;
 	private _extensionShutdownHandler?: ShutdownHandler;
 	private _extensionErrorListener?: ExtensionErrorListener;
 	private _extensionErrorUnsubscriber?: () => void;
@@ -1100,19 +1103,19 @@ export class AgentSession {
 	}
 
 	/**
-	 * Expand skill commands (/skill:name args) to their full content.
-	 * Returns the expanded text, or the original text if not a skill command or skill not found.
+	 * Expand a /skill:name invocation into the exact prompt text pi would submit.
+	 * Returns undefined when the input is not a known skill command.
 	 * Emits errors via extension runner if file read fails.
 	 */
-	private _expandSkillCommand(text: string): string {
-		if (!text.startsWith("/skill:")) return text;
+	expandSkillCommand(commandLine: string): string | undefined {
+		if (!commandLine.startsWith("/skill:")) return undefined;
 
-		const spaceIndex = text.indexOf(" ");
-		const skillName = spaceIndex === -1 ? text.slice(7) : text.slice(7, spaceIndex);
-		const args = spaceIndex === -1 ? "" : text.slice(spaceIndex + 1).trim();
+		const spaceIndex = commandLine.indexOf(" ");
+		const skillName = spaceIndex === -1 ? commandLine.slice(7) : commandLine.slice(7, spaceIndex);
+		const args = spaceIndex === -1 ? "" : commandLine.slice(spaceIndex + 1).trim();
 
 		const skill = this.resourceLoader.getSkills().skills.find((s) => s.name === skillName);
-		if (!skill) return text; // Unknown skill, pass through
+		if (!skill) return undefined;
 
 		try {
 			const content = readFileSync(skill.filePath, "utf-8");
@@ -1120,14 +1123,17 @@ export class AgentSession {
 			const skillBlock = `<skill name="${skill.name}" location="${skill.filePath}">\nReferences are relative to ${skill.baseDir}.\n\n${body}\n</skill>`;
 			return args ? `${skillBlock}\n\n${args}` : skillBlock;
 		} catch (err) {
-			// Emit error like extension commands do
 			this._extensionRunner?.emitError({
 				extensionPath: skill.filePath,
 				event: "skill_expansion",
 				error: err instanceof Error ? err.message : String(err),
 			});
-			return text; // Return original on error
+			return undefined;
 		}
+	}
+
+	private _expandSkillCommand(text: string): string {
+		return this.expandSkillCommand(text) ?? text;
 	}
 
 	/**
@@ -2017,6 +2023,9 @@ export class AgentSession {
 		if (bindings.executeCommand !== undefined) {
 			this._extensionExecuteCommand = bindings.executeCommand;
 		}
+		if (bindings.submitSkill !== undefined) {
+			this._extensionSubmitSkill = bindings.submitSkill;
+		}
 		if (bindings.shutdownHandler !== undefined) {
 			this._extensionShutdownHandler = bindings.shutdownHandler;
 		}
@@ -2155,6 +2164,8 @@ export class AgentSession {
 					});
 				},
 				executeCommand: async (commandLine) => this.executeCommand(commandLine),
+				submitSkill: async (commandLine) => this.submitSkill(commandLine),
+				expandSkillCommand: (commandLine) => this.expandSkillCommand(commandLine),
 				appendEntry: (customType, data) => {
 					this.sessionManager.appendCustomEntry(customType, data);
 				},
@@ -2360,13 +2371,30 @@ export class AgentSession {
 		}
 
 		if (this._extensionExecuteCommand) {
-			const handled = await this._extensionExecuteCommand(commandLine);
-			if (handled) {
-				return true;
-			}
+			return await this._extensionExecuteCommand(commandLine);
 		}
 
 		return await this._tryExecuteExtensionCommand(commandLine);
+	}
+
+	async submitSkill(commandLine: string): Promise<boolean> {
+		if (!commandLine.startsWith("/skill:")) {
+			throw new Error("Skills must start with '/skill:'");
+		}
+
+		if (this._extensionSubmitSkill) {
+			return await this._extensionSubmitSkill(commandLine);
+		}
+
+		if (!this.expandSkillCommand(commandLine)) {
+			return false;
+		}
+
+		await this.prompt(commandLine, {
+			source: "extension",
+			streamingBehavior: this.isStreaming ? "steer" : undefined,
+		});
+		return true;
 	}
 
 	async reload(): Promise<void> {
@@ -2385,6 +2413,7 @@ export class AgentSession {
 			this._extensionUIContext ||
 			this._extensionCommandContextActions ||
 			this._extensionExecuteCommand ||
+			this._extensionSubmitSkill ||
 			this._extensionShutdownHandler ||
 			this._extensionErrorListener;
 		if (this._extensionRunner && hasBindings) {

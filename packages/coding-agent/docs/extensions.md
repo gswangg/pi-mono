@@ -1114,6 +1114,54 @@ When not streaming, the message is sent immediately and triggers a new turn. Whe
 
 See [send-user-message.ts](../examples/extensions/send-user-message.ts) for a complete example.
 
+### pi.executeCommand(commandLine)
+
+Execute a built-in interactive slash command or an extension-defined command through pi's command dispatcher.
+
+```typescript
+await pi.executeCommand("/reload");
+await pi.executeCommand("/compact focus on recent edits");
+await pi.executeCommand("/my-extension-command arg1 arg2");
+```
+
+**Semantics:**
+- Returns `true` when the command name is recognized and dispatched
+- Returns `false` when the slash input is not a built-in or extension command in the current mode/session
+- Does **not** fall back to prompt templates, skills, or normal prompt submission
+
+### pi.expandSkillCommand(commandLine)
+
+Expand a `/skill:name ...` invocation into the exact prompt text pi would submit.
+
+```typescript
+const expanded = pi.expandSkillCommand("/skill:debug logs");
+if (expanded) {
+  console.log(expanded);
+}
+```
+
+**Semantics:**
+- Returns the expanded prompt text for a known skill
+- Returns `undefined` when the skill is unknown
+- Useful for bridges that need to correlate a raw `/skill:name ...` ingress message with the expanded local user message pi will eventually append
+
+### pi.submitSkill(commandLine)
+
+Submit a `/skill:name ...` invocation through the same queue-aware path used by local interactive slash input.
+
+```typescript
+await pi.submitSkill("/skill:debug logs");
+```
+
+**Semantics:**
+- Returns `true` when the skill exists and was accepted for submission
+- Returns `false` when the skill is unknown
+- In interactive mode:
+  - idle: submits immediately
+  - streaming: queues as `steer`
+  - compacting: queues for after compaction
+- Does **not** execute built-ins, extension commands, prompt templates, or arbitrary slash text
+
 ### pi.appendEntry(customType, data?)
 
 Persist extension state (does NOT participate in LLM context).

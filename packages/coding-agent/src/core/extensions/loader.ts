@@ -126,6 +126,8 @@ export function createExtensionRuntime(): ExtensionRuntime {
 		sendMessage: notInitialized,
 		sendUserMessage: notInitialized,
 		executeCommand: notInitialized,
+		submitSkill: notInitialized,
+		expandSkillCommand: notInitialized,
 		appendEntry: notInitialized,
 		setSessionName: notInitialized,
 		getSessionName: notInitialized,
@@ -230,6 +232,14 @@ function createExtensionAPI(
 
 		executeCommand(commandLine: string): Promise<boolean> {
 			return runtime.executeCommand(commandLine);
+		},
+
+		submitSkill(commandLine: string): Promise<boolean> {
+			return runtime.submitSkill(commandLine);
+		},
+
+		expandSkillCommand(commandLine: string): string | undefined {
+			return runtime.expandSkillCommand(commandLine);
 		},
 
 		appendEntry(customType: string, data?: unknown): void {
