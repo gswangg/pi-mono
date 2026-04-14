@@ -684,7 +684,7 @@ export class InteractiveMode {
 			const data = (await response.json()) as { version?: string };
 			const latestVersion = data.version;
 
-			if (latestVersion && latestVersion !== this.version) {
+			if (latestVersion && latestVersion.replace(/\+.*$/, "") !== this.version.replace(/\+.*$/, "")) {
 				return latestVersion;
 			}
 
