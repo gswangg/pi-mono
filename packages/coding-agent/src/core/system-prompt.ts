@@ -124,6 +124,12 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions = {}): strin
 
 	const guidelines = guidelinesList.map((g) => `- ${g}`).join("\n");
 
+	// Keep the pi documentation guidance phrased conservatively.
+	// Anthropic OAuth requests were observed to fail on several stock prompt
+	// phrasings, including the old combined workflow bullet, the long
+	// "When asked about:" docs enumeration, and the wording
+	// "Always read pi .md files completely". Preserve the behavior while
+	// avoiding those known-bad prompt patterns, but keep the docs map compact.
 	let prompt = `You are an expert coding assistant operating inside pi, a coding agent harness. You help users by reading files, executing commands, editing code, and writing new files.
 
 Available tools:
@@ -138,9 +144,14 @@ Pi documentation (read only when the user asks about pi itself, its SDK, extensi
 - Main documentation: ${readmePath}
 - Additional docs: ${docsPath}
 - Examples: ${examplesPath} (extensions, custom tools, SDK)
-- When asked about: extensions (docs/extensions.md, examples/extensions/), themes (docs/themes.md), skills (docs/skills.md), prompt templates (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings (docs/keybindings.md), SDK integrations (docs/sdk.md), custom providers (docs/custom-provider.md), adding models (docs/models.md), pi packages (docs/packages.md)
-- When working on pi topics, read the docs and examples, and follow .md cross-references before implementing
-- Always read pi .md files completely and follow links to related docs (e.g., tui.md for TUI API details)`;
+- Extensions: docs/extensions.md; see examples/extensions/ for examples.
+- Themes, skills, and prompt templates: docs/themes.md, docs/skills.md, and docs/prompt-templates.md.
+- TUI, keybindings, and SDK: docs/tui.md, docs/keybindings.md, and docs/sdk.md.
+- Custom providers, models, and packages: docs/custom-provider.md, docs/models.md, and docs/packages.md.
+- For pi work, read the docs and examples before implementing.
+- Follow relevant cross-references.
+- Read the relevant pi docs fully.
+- Follow related doc links as needed (e.g., tui.md for TUI details).`;
 
 	if (appendSection) {
 		prompt += appendSection;

@@ -91,5 +91,34 @@ describe("buildSystemPrompt", () => {
 
 			expect(prompt.match(/- Use dynamic_tool for summaries\./g)).toHaveLength(1);
 		});
+
+		test("uses the anthropic-safe pi docs wording", () => {
+			const prompt = buildSystemPrompt({
+				contextFiles: [],
+				skills: [],
+			});
+
+			expect(prompt).toContain("- Extensions: docs/extensions.md; see examples/extensions/ for examples.");
+			expect(prompt).toContain(
+				"- Themes, skills, and prompt templates: docs/themes.md, docs/skills.md, and docs/prompt-templates.md.",
+			);
+			expect(prompt).toContain("- TUI, keybindings, and SDK: docs/tui.md, docs/keybindings.md, and docs/sdk.md.");
+			expect(prompt).toContain(
+				"- Custom providers, models, and packages: docs/custom-provider.md, docs/models.md, and docs/packages.md.",
+			);
+			expect(prompt).toContain("- For pi work, read the docs and examples before implementing.");
+			expect(prompt).toContain("- Follow relevant cross-references.");
+			expect(prompt).toContain("- Read the relevant pi docs fully.");
+			expect(prompt).toContain("- Follow related doc links as needed (e.g., tui.md for TUI details).");
+			expect(prompt).not.toContain(
+				"- When asked about: extensions (docs/extensions.md, examples/extensions/), themes (docs/themes.md), skills (docs/skills.md), prompt templates (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings (docs/keybindings.md), SDK integrations (docs/sdk.md), custom providers (docs/custom-provider.md), adding models (docs/models.md), pi packages (docs/packages.md)",
+			);
+			expect(prompt).not.toContain(
+				"- Always read pi .md files completely and follow links to related docs (e.g., tui.md for TUI API details)",
+			);
+			expect(prompt).not.toContain(
+				"- When working on pi topics, read the docs and examples, and follow .md cross-references before implementing",
+			);
+		});
 	});
 });
