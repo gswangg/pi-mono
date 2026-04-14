@@ -14,13 +14,45 @@ export interface BuiltinSlashCommand {
 	description: string;
 }
 
-export function getBuiltinSlashCommandInfos(): SlashCommandInfo[] {
-	return BUILTIN_SLASH_COMMANDS.map((command) => ({
+export interface DiscoverableSlashCommandInput {
+	builtins?: ReadonlyArray<BuiltinSlashCommand>;
+	extensions?: ReadonlyArray<{ invocationName: string; description?: string; sourceInfo: SourceInfo }>;
+	prompts?: ReadonlyArray<{ name: string; description?: string; sourceInfo: SourceInfo }>;
+	skills?: ReadonlyArray<{ name: string; description?: string; sourceInfo: SourceInfo }>;
+}
+
+export function getBuiltinSlashCommandInfos(
+	builtins: ReadonlyArray<BuiltinSlashCommand> = BUILTIN_SLASH_COMMANDS,
+): SlashCommandInfo[] {
+	return builtins.map((command) => ({
 		name: command.name,
 		description: command.description,
 		source: "builtin" as const,
 		sourceInfo: createSyntheticSourceInfo(`<builtin:${command.name}>`, { source: "builtin" }),
 	}));
+}
+
+export function buildDiscoverableSlashCommandInfos(input: DiscoverableSlashCommandInput): SlashCommandInfo[] {
+	const builtinCommands = getBuiltinSlashCommandInfos(input.builtins);
+	const extensionCommands = (input.extensions ?? []).map((command) => ({
+		name: command.invocationName,
+		description: command.description,
+		source: "extension" as const,
+		sourceInfo: command.sourceInfo,
+	}));
+	const promptCommands = (input.prompts ?? []).map((prompt) => ({
+		name: prompt.name,
+		description: prompt.description,
+		source: "prompt" as const,
+		sourceInfo: prompt.sourceInfo,
+	}));
+	const skillCommands = (input.skills ?? []).map((skill) => ({
+		name: `skill:${skill.name}`,
+		description: skill.description,
+		source: "skill" as const,
+		sourceInfo: skill.sourceInfo,
+	}));
+	return [...builtinCommands, ...extensionCommands, ...promptCommands, ...skillCommands];
 }
 
 export const BUILTIN_SLASH_COMMANDS: ReadonlyArray<BuiltinSlashCommand> = [

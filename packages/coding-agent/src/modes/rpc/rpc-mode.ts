@@ -19,6 +19,7 @@ import type {
 	ExtensionWidgetOptions,
 } from "../../core/extensions/index.js";
 import { takeOverStdout, writeRawStdout } from "../../core/output-guard.js";
+import { buildDiscoverableSlashCommandInfos } from "../../core/slash-commands.js";
 import { type Theme, theme } from "../interactive/theme/theme.js";
 import { attachJsonlLineReader, serializeJsonLine } from "./jsonl.js";
 import type {
@@ -569,35 +570,11 @@ export async function runRpcMode(runtimeHost: AgentSessionRuntime): Promise<neve
 			// =================================================================
 
 			case "get_commands": {
-				const commands: RpcSlashCommand[] = [];
-
-				for (const command of session.extensionRunner?.getRegisteredCommands() ?? []) {
-					commands.push({
-						name: command.invocationName,
-						description: command.description,
-						source: "extension",
-						sourceInfo: command.sourceInfo,
-					});
-				}
-
-				for (const template of session.promptTemplates) {
-					commands.push({
-						name: template.name,
-						description: template.description,
-						source: "prompt",
-						sourceInfo: template.sourceInfo,
-					});
-				}
-
-				for (const skill of session.resourceLoader.getSkills().skills) {
-					commands.push({
-						name: `skill:${skill.name}`,
-						description: skill.description,
-						source: "skill",
-						sourceInfo: skill.sourceInfo,
-					});
-				}
-
+				const commands: RpcSlashCommand[] = buildDiscoverableSlashCommandInfos({
+					extensions: session.extensionRunner?.getRegisteredCommands() ?? [],
+					prompts: session.promptTemplates,
+					skills: session.resourceLoader.getSkills().skills,
+				});
 				return success(id, "get_commands", { commands });
 			}
 

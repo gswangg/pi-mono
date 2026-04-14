@@ -670,7 +670,8 @@ The current session name is available via `get_state` in the `sessionName` field
 
 #### get_commands
 
-Get available commands (extension commands, prompt templates, and skills). These can be invoked via the `prompt` command by prefixing with `/`.
+Get discoverable slash inputs (built-in interactive commands, extension commands, prompt templates, and skills).
+Built-ins are interactive-mode commands; extension commands, prompt templates, and skills can also be sent via the `prompt` command by prefixing with `/`.
 
 ```json
 {"type": "get_commands"}
@@ -684,6 +685,7 @@ Response:
   "success": true,
   "data": {
     "commands": [
+      {"name": "reload", "description": "Reload keybindings, extensions, skills, prompts, and themes", "source": "builtin", "path": "<builtin:reload>"},
       {"name": "session-name", "description": "Set or clear session name", "source": "extension", "path": "/home/user/.pi/agent/extensions/session.ts"},
       {"name": "fix-tests", "description": "Fix failing tests", "source": "prompt", "location": "project", "path": "/home/user/myproject/.pi/agent/prompts/fix-tests.md"},
       {"name": "skill:brave-search", "description": "Web search via Brave API", "source": "skill", "location": "user", "path": "/home/user/.pi/agent/skills/brave-search/SKILL.md"}
@@ -695,7 +697,8 @@ Response:
 Each command has:
 - `name`: Command name (invoke with `/name`)
 - `description`: Human-readable description (optional for extension commands)
-- `source`: What kind of command:
+- `source`: What kind of slash input:
+  - `"builtin"`: Built-in interactive command handled by pi itself
   - `"extension"`: Registered via `pi.registerCommand()` in an extension
   - `"prompt"`: Loaded from a prompt template `.md` file
   - `"skill"`: Loaded from a skill directory (name is prefixed with `skill:`)
@@ -705,7 +708,7 @@ Each command has:
   - `"path"`: Explicit path via CLI or settings
 - `path`: Absolute file path to the command source (optional)
 
-**Note**: Built-in TUI commands (`/settings`, `/hotkeys`, etc.) are not included. They are handled only in interactive mode and would not execute if sent via `prompt`.
+**Note**: Built-in interactive commands (`/settings`, `/hotkeys`, etc.) are included for discoverability, but they are still interactive-mode commands rather than prompt expansions.
 
 ## Events
 

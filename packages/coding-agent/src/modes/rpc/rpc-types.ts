@@ -77,8 +77,8 @@ export interface RpcSlashCommand {
 	name: string;
 	/** Human-readable description */
 	description?: string;
-	/** What kind of command this is */
-	source: "extension" | "prompt" | "skill";
+	/** What kind of slash input this is */
+	source: "builtin" | "extension" | "prompt" | "skill";
 	/** Source metadata for the owning resource */
 	sourceInfo: SourceInfo;
 }

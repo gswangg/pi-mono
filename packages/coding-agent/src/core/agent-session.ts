@@ -76,7 +76,7 @@ import type { ResourceExtensionPaths, ResourceLoader } from "./resource-loader.j
 import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "./session-manager.js";
 import { CURRENT_SESSION_VERSION, getLatestCompactionEntry, type SessionHeader } from "./session-manager.js";
 import type { SettingsManager } from "./settings-manager.js";
-import { getBuiltinSlashCommandInfos, type SlashCommandInfo } from "./slash-commands.js";
+import { buildDiscoverableSlashCommandInfos, type SlashCommandInfo } from "./slash-commands.js";
 import { createSyntheticSourceInfo, type SourceInfo } from "./source-info.js";
 import { buildSystemPrompt } from "./system-prompt.js";
 import { type BashOperations, createLocalBashOperations } from "./tools/bash.js";
@@ -2118,31 +2118,12 @@ export class AgentSession {
 	}
 
 	private _bindExtensionCore(runner: ExtensionRunner): void {
-		const getCommands = (): SlashCommandInfo[] => {
-			const builtinCommands: SlashCommandInfo[] = getBuiltinSlashCommandInfos();
-			const extensionCommands: SlashCommandInfo[] = runner.getRegisteredCommands().map((command) => ({
-				name: command.invocationName,
-				description: command.description,
-				source: "extension",
-				sourceInfo: command.sourceInfo,
-			}));
-
-			const templates: SlashCommandInfo[] = this.promptTemplates.map((template) => ({
-				name: template.name,
-				description: template.description,
-				source: "prompt",
-				sourceInfo: template.sourceInfo,
-			}));
-
-			const skills: SlashCommandInfo[] = this._resourceLoader.getSkills().skills.map((skill) => ({
-				name: `skill:${skill.name}`,
-				description: skill.description,
-				source: "skill",
-				sourceInfo: skill.sourceInfo,
-			}));
-
-			return [...builtinCommands, ...extensionCommands, ...templates, ...skills];
-		};
+		const getCommands = (): SlashCommandInfo[] =>
+			buildDiscoverableSlashCommandInfos({
+				extensions: runner.getRegisteredCommands(),
+				prompts: this.promptTemplates,
+				skills: this._resourceLoader.getSkills().skills,
+			});
 
 		runner.bindCore(
 			{
