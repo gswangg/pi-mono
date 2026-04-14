@@ -8,6 +8,7 @@
 ### Added
 
 - Added extension slash-control APIs `pi.submitSkill(commandLine)` and `pi.expandSkillCommand(commandLine)`, alongside the existing `pi.executeCommand(commandLine)`, so extensions can drive built-ins/extension commands separately from queue-aware `/skill:name` submission.
+- Added built-in interactive commands to `pi.getCommands()` discoverability output so remote bridges and other extensions can advertise slash inputs like `/reload`, `/new`, and `/compact` without hardcoded lists.
 - Set `PI_CODING_AGENT=true` environment variable at startup so sub-processes can detect they are running inside the coding agent ([#2868](https://github.com/badlogic/pi-mono/issues/2868))
 
 ## [0.66.1] - 2026-04-08

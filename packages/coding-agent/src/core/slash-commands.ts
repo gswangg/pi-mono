@@ -1,6 +1,6 @@
-import type { SourceInfo } from "./source-info.js";
+import { createSyntheticSourceInfo, type SourceInfo } from "./source-info.js";
 
-export type SlashCommandSource = "extension" | "prompt" | "skill";
+export type SlashCommandSource = "builtin" | "extension" | "prompt" | "skill";
 
 export interface SlashCommandInfo {
 	name: string;
@@ -12,6 +12,15 @@ export interface SlashCommandInfo {
 export interface BuiltinSlashCommand {
 	name: string;
 	description: string;
+}
+
+export function getBuiltinSlashCommandInfos(): SlashCommandInfo[] {
+	return BUILTIN_SLASH_COMMANDS.map((command) => ({
+		name: command.name,
+		description: command.description,
+		source: "builtin" as const,
+		sourceInfo: createSyntheticSourceInfo(`<builtin:${command.name}>`, { source: "builtin" }),
+	}));
 }
 
 export const BUILTIN_SLASH_COMMANDS: ReadonlyArray<BuiltinSlashCommand> = [

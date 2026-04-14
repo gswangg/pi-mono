@@ -1252,8 +1252,8 @@ pi.registerCommand("deploy", {
 
 ### pi.getCommands()
 
-Get the slash commands available for invocation via `prompt` in the current session. Includes extension commands, prompt templates, and skill commands.
-The list matches the RPC `get_commands` ordering: extensions first, then templates, then skills.
+Get the slash inputs currently discoverable in the session. Includes built-in interactive commands, extension commands, prompt templates, and skill commands.
+For extension runtime consumers, the ordering is: built-ins first, then extensions, then templates, then skills.
 
 ```typescript
 const commands = pi.getCommands();
@@ -1265,9 +1265,9 @@ Each entry has this shape:
 
 ```typescript
 {
-  name: string; // Invokable command name without the leading slash. May be suffixed like "review:1"
+  name: string; // Invokable slash input name without the leading slash. May be suffixed like "review:1"
   description?: string;
-  source: "extension" | "prompt" | "skill";
+  source: "builtin" | "extension" | "prompt" | "skill";
   sourceInfo: {
     path: string;
     source: string;
@@ -1280,8 +1280,7 @@ Each entry has this shape:
 
 Use `sourceInfo` as the canonical provenance field. Do not infer ownership from command names or from ad hoc path parsing.
 
-Built-in interactive commands (like `/model` and `/settings`) are not included here. They are handled only in interactive
-mode and would not execute if sent via `prompt`.
+Built-in entries are discoverability metadata for interactive-mode slash commands like `/model` and `/settings`. They are executable through `pi.executeCommand(...)`, not through `prompt()`.
 
 ### pi.registerMessageRenderer(customType, renderer)
 

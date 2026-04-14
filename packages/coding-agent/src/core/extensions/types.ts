@@ -1126,7 +1126,7 @@ export interface ExtensionAPI {
 	/** Set the active tools by name. */
 	setActiveTools(toolNames: string[]): void;
 
-	/** Get available slash commands in the current session. */
+	/** Get discoverable slash inputs in the current session, including built-ins, extension commands, prompt templates, and skills. */
 	getCommands(): SlashCommandInfo[];
 
 	// =========================================================================

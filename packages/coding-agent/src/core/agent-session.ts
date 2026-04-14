@@ -76,7 +76,7 @@ import type { ResourceExtensionPaths, ResourceLoader } from "./resource-loader.j
 import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "./session-manager.js";
 import { CURRENT_SESSION_VERSION, getLatestCompactionEntry, type SessionHeader } from "./session-manager.js";
 import type { SettingsManager } from "./settings-manager.js";
-import type { SlashCommandInfo } from "./slash-commands.js";
+import { getBuiltinSlashCommandInfos, type SlashCommandInfo } from "./slash-commands.js";
 import { createSyntheticSourceInfo, type SourceInfo } from "./source-info.js";
 import { buildSystemPrompt } from "./system-prompt.js";
 import { type BashOperations, createLocalBashOperations } from "./tools/bash.js";
@@ -2119,6 +2119,7 @@ export class AgentSession {
 
 	private _bindExtensionCore(runner: ExtensionRunner): void {
 		const getCommands = (): SlashCommandInfo[] => {
+			const builtinCommands: SlashCommandInfo[] = getBuiltinSlashCommandInfos();
 			const extensionCommands: SlashCommandInfo[] = runner.getRegisteredCommands().map((command) => ({
 				name: command.invocationName,
 				description: command.description,
@@ -2140,7 +2141,7 @@ export class AgentSession {
 				sourceInfo: skill.sourceInfo,
 			}));
 
-			return [...extensionCommands, ...templates, ...skills];
+			return [...builtinCommands, ...extensionCommands, ...templates, ...skills];
 		};
 
 		runner.bindCore(
