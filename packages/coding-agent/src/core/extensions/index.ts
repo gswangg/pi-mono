@@ -20,6 +20,7 @@ export type {
 } from "./runner.js";
 export { ExtensionRunner } from "./runner.js";
 export type {
+	AfterProviderResponseEvent,
 	AgentEndEvent,
 	AgentStartEvent,
 	// Re-exports
@@ -136,6 +137,8 @@ export type {
 	ToolDefinition,
 	// Events - Tool Execution
 	ToolExecutionEndEvent,
+	// Tool execution mode
+	ToolExecutionMode,
 	ToolExecutionStartEvent,
 	ToolExecutionUpdateEvent,
 	ToolInfo,
