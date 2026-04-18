@@ -80,11 +80,13 @@ export function compareVersions(v1: ChangelogEntry, v2: ChangelogEntry): number 
 }
 
 /**
- * Get entries newer than lastVersion
+ * Get entries newer than lastVersion.
+ * Strips semver build metadata (+suffix) so fork builds like
+ * "0.67.68+gswangg.1" parse to 0.67.68 instead of leaving NaN patch.
  */
 export function getNewEntries(entries: ChangelogEntry[], lastVersion: string): ChangelogEntry[] {
-	// Parse lastVersion
-	const parts = lastVersion.split(".").map(Number);
+	const core = lastVersion.replace(/\+.*$/, "");
+	const parts = core.split(".").map(Number);
 	const last: ChangelogEntry = {
 		major: parts[0] || 0,
 		minor: parts[1] || 0,
