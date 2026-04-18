@@ -57,7 +57,7 @@ import type {
 } from "../../core/extensions/index.js";
 import { FooterDataProvider, type ReadonlyFooterDataProvider } from "../../core/footer-data-provider.js";
 import { type AppKeybinding, KeybindingsManager } from "../../core/keybindings.js";
-import { createCompactionSummaryMessage } from "../../core/messages.js";
+import { createCompactionSummaryMessage, type MessageProvenance } from "../../core/messages.js";
 import { defaultModelPerProvider, findExactModelReferenceMatch, resolveModelScope } from "../../core/model-resolver.js";
 import { DefaultPackageManager } from "../../core/package-manager.js";
 import type { ResourceDiagnostic } from "../../core/resource-loader.js";
@@ -1435,8 +1435,11 @@ export class InteractiveMode {
 			executeCommand: async (commandLine) => {
 				return await this.executeCommand(commandLine, { source: "extension" });
 			},
-			submitSkill: async (commandLine) => {
-				return await this.submitSkill(commandLine, { source: "extension" });
+			submitSkill: async (commandLine, options) => {
+				return await this.submitSkill(commandLine, {
+					source: "extension",
+					...(options?.provenance ? { provenance: options.provenance } : {}),
+				});
 			},
 			commandContextActions: {
 				waitForIdle: () => this.session.agent.waitForIdle(),
@@ -2420,7 +2423,10 @@ export class InteractiveMode {
 		return true;
 	}
 
-	private async submitSkill(text: string, options?: { source?: "interactive" | "extension" }): Promise<boolean> {
+	private async submitSkill(
+		text: string,
+		options?: { source?: "interactive" | "extension"; provenance?: MessageProvenance },
+	): Promise<boolean> {
 		return await trySubmitInteractiveSkill(
 			text,
 			{
@@ -2433,6 +2439,7 @@ export class InteractiveMode {
 					await this.session.prompt(commandLine, {
 						source: promptOptions?.source,
 						streamingBehavior: promptOptions?.streamingBehavior,
+						...(promptOptions?.provenance ? { provenance: promptOptions.provenance } : {}),
 					});
 				},
 				queueCompactionMessage: (commandLine, mode) => this.queueCompactionMessage(commandLine, mode),

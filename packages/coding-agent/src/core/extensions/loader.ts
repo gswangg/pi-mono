@@ -234,8 +234,8 @@ function createExtensionAPI(
 			return runtime.executeCommand(commandLine);
 		},
 
-		submitSkill(commandLine: string): Promise<boolean> {
-			return runtime.submitSkill(commandLine);
+		submitSkill(commandLine, options) {
+			return runtime.submitSkill(commandLine, options);
 		},
 
 		expandSkillCommand(commandLine: string): string | undefined {

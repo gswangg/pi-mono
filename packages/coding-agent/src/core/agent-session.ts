@@ -69,7 +69,7 @@ import {
 	type TurnStartEvent,
 	wrapRegisteredTools,
 } from "./extensions/index.js";
-import type { BashExecutionMessage, CustomMessage } from "./messages.js";
+import type { BashExecutionMessage, CustomMessage, MessageProvenance } from "./messages.js";
 import type { ModelRegistry } from "./model-registry.js";
 import { expandPromptTemplate, type PromptTemplate } from "./prompt-templates.js";
 import type { ResourceExtensionPaths, ResourceLoader } from "./resource-loader.js";
@@ -184,6 +184,12 @@ export interface PromptOptions {
 	streamingBehavior?: "steer" | "followUp";
 	/** Source of input for extension input event handlers. Defaults to "interactive". */
 	source?: InputSource;
+	/**
+	 * Optional origin metadata attached to the resulting user message. Round-trips through
+	 * queueing, `message_start`/`message_end` events, and session JSONL persistence. Never
+	 * transported to the LLM. See `docs/message-provenance-api.md`.
+	 */
+	provenance?: MessageProvenance;
 	/** Internal hook used by RPC mode to observe prompt preflight acceptance or rejection. */
 	preflightResult?: (success: boolean) => void;
 }
@@ -986,9 +992,9 @@ export class AgentSession {
 					);
 				}
 				if (options.streamingBehavior === "followUp") {
-					await this._queueFollowUp(expandedText, currentImages);
+					await this._queueFollowUp(expandedText, currentImages, options?.provenance);
 				} else {
-					await this._queueSteer(expandedText, currentImages);
+					await this._queueSteer(expandedText, currentImages, options?.provenance);
 				}
 				preflightResult?.(true);
 				return;
@@ -1039,6 +1045,7 @@ export class AgentSession {
 				role: "user",
 				content: userContent,
 				timestamp: Date.now(),
+				...(options?.provenance ? { provenance: options.provenance } : {}),
 			});
 
 			// Inject any pending "nextTurn" messages as context alongside the user message
@@ -1198,7 +1205,7 @@ export class AgentSession {
 	/**
 	 * Internal: Queue a steering message (already expanded, no extension command check).
 	 */
-	private async _queueSteer(text: string, images?: ImageContent[]): Promise<void> {
+	private async _queueSteer(text: string, images?: ImageContent[], provenance?: MessageProvenance): Promise<void> {
 		this._steeringMessages.push(text);
 		this._emitQueueUpdate();
 		const content: (TextContent | ImageContent)[] = [{ type: "text", text }];
@@ -1209,13 +1216,14 @@ export class AgentSession {
 			role: "user",
 			content,
 			timestamp: Date.now(),
+			...(provenance ? { provenance } : {}),
 		});
 	}
 
 	/**
 	 * Internal: Queue a follow-up message (already expanded, no extension command check).
 	 */
-	private async _queueFollowUp(text: string, images?: ImageContent[]): Promise<void> {
+	private async _queueFollowUp(text: string, images?: ImageContent[], provenance?: MessageProvenance): Promise<void> {
 		this._followUpMessages.push(text);
 		this._emitQueueUpdate();
 		const content: (TextContent | ImageContent)[] = [{ type: "text", text }];
@@ -1226,6 +1234,7 @@ export class AgentSession {
 			role: "user",
 			content,
 			timestamp: Date.now(),
+			...(provenance ? { provenance } : {}),
 		});
 	}
 
@@ -1299,10 +1308,13 @@ export class AgentSession {
 	 *
 	 * @param content User message content (string or content array)
 	 * @param options.deliverAs Delivery mode when streaming: "steer" or "followUp"
+	 * @param options.provenance Origin metadata preserved on the resulting user message;
+	 *                           round-trips through queueing, events, and session JSONL.
+	 *                           See `docs/message-provenance-api.md`.
 	 */
 	async sendUserMessage(
 		content: string | (TextContent | ImageContent)[],
-		options?: { deliverAs?: "steer" | "followUp" },
+		options?: { deliverAs?: "steer" | "followUp"; provenance?: MessageProvenance },
 	): Promise<void> {
 		// Normalize content to text string + optional images
 		let text: string;
@@ -1330,6 +1342,7 @@ export class AgentSession {
 			streamingBehavior: options?.deliverAs,
 			images,
 			source: "extension",
+			...(options?.provenance ? { provenance: options.provenance } : {}),
 		});
 	}
 
@@ -2164,7 +2177,7 @@ export class AgentSession {
 					});
 				},
 				executeCommand: async (commandLine) => this.executeCommand(commandLine),
-				submitSkill: async (commandLine) => this.submitSkill(commandLine),
+				submitSkill: async (commandLine, options) => this.submitSkill(commandLine, options),
 				expandSkillCommand: (commandLine) => this.expandSkillCommand(commandLine),
 				appendEntry: (customType, data) => {
 					this.sessionManager.appendCustomEntry(customType, data);
@@ -2377,13 +2390,13 @@ export class AgentSession {
 		return await this._tryExecuteExtensionCommand(commandLine);
 	}
 
-	async submitSkill(commandLine: string): Promise<boolean> {
+	async submitSkill(commandLine: string, options?: { provenance?: MessageProvenance }): Promise<boolean> {
 		if (!commandLine.startsWith("/skill:")) {
 			throw new Error("Skills must start with '/skill:'");
 		}
 
 		if (this._extensionSubmitSkill) {
-			return await this._extensionSubmitSkill(commandLine);
+			return await this._extensionSubmitSkill(commandLine, options);
 		}
 
 		if (!this.expandSkillCommand(commandLine)) {
@@ -2393,6 +2406,7 @@ export class AgentSession {
 		await this.prompt(commandLine, {
 			source: "extension",
 			streamingBehavior: this.isStreaming ? "steer" : undefined,
+			...(options?.provenance ? { provenance: options.provenance } : {}),
 		});
 		return true;
 	}

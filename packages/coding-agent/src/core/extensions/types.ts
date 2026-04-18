@@ -46,7 +46,7 @@ import type { EventBus } from "../event-bus.js";
 import type { ExecOptions, ExecResult } from "../exec.js";
 import type { ReadonlyFooterDataProvider } from "../footer-data-provider.js";
 import type { KeybindingsManager } from "../keybindings.js";
-import type { CustomMessage } from "../messages.js";
+import type { CustomMessage, MessageProvenance } from "../messages.js";
 import type { ModelRegistry } from "../model-registry.js";
 import type {
 	BranchSummaryEntry,
@@ -1104,17 +1104,30 @@ export interface ExtensionAPI {
 	/**
 	 * Send a user message to the agent. Always triggers a turn.
 	 * When the agent is streaming, use deliverAs to specify how to queue the message.
+	 *
+	 * Provide `options.provenance` to attach opaque origin metadata (source + external id)
+	 * to the resulting user message. Provenance round-trips through queueing, `message_start`
+	 * / `message_end` events, and session JSONL persistence. It is never transported to the
+	 * LLM. See `docs/message-provenance-api.md`.
 	 */
 	sendUserMessage(
 		content: string | (TextContent | ImageContent)[],
-		options?: { deliverAs?: "steer" | "followUp" },
+		options?: { deliverAs?: "steer" | "followUp"; provenance?: MessageProvenance },
 	): void;
 
 	/** Execute a built-in or extension slash command through pi's command dispatcher. Returns false if the command is unknown in the current mode or session. */
 	executeCommand(commandLine: string): Promise<boolean>;
 
 	/** Submit a /skill:name invocation through the same queue-aware path used by interactive slash input. Returns false if the skill command is unknown. */
-	submitSkill(commandLine: string): Promise<boolean>;
+	/**
+	 * Submit a `/skill:name` invocation through the same queue-aware path used by interactive
+	 * slash input. Returns `false` if the skill command is unknown.
+	 *
+	 * Provide `options.provenance` to attach opaque origin metadata to the resulting expanded
+	 * user message. Provenance round-trips through queueing, `message_start`/`message_end`
+	 * events, and session JSONL persistence. See `docs/message-provenance-api.md`.
+	 */
+	submitSkill(commandLine: string, options?: { provenance?: MessageProvenance }): Promise<boolean>;
 
 	/** Expand a /skill:name invocation into the exact prompt text pi would submit, or return undefined when the skill is unknown. */
 	expandSkillCommand(commandLine: string): string | undefined;
@@ -1335,14 +1348,17 @@ export type SendMessageHandler = <T = unknown>(
 
 export type SendUserMessageHandler = (
 	content: string | (TextContent | ImageContent)[],
-	options?: { deliverAs?: "steer" | "followUp" },
+	options?: { deliverAs?: "steer" | "followUp"; provenance?: MessageProvenance },
 ) => void;
 
 export type AppendEntryHandler = <T = unknown>(customType: string, data?: T) => void;
 
 export type ExecuteCommandHandler = (commandLine: string) => Promise<boolean>;
 
-export type SubmitSkillHandler = (commandLine: string) => Promise<boolean>;
+export type SubmitSkillHandler = (
+	commandLine: string,
+	options?: { provenance?: MessageProvenance },
+) => Promise<boolean>;
 
 export type ExpandSkillCommandHandler = (commandLine: string) => string | undefined;
 

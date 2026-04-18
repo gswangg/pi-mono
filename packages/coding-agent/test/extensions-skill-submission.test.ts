@@ -80,9 +80,13 @@ describe("ExtensionAPI skill helpers", () => {
 
 		expect(api).toBeDefined();
 		await expect(api!.submitSkill("/skill:debug logs")).resolves.toBe(true);
-		expect(submitSkill).toHaveBeenCalledWith("/skill:debug logs");
+		expect(submitSkill).toHaveBeenCalledWith("/skill:debug logs", undefined);
 		expect(api!.expandSkillCommand("/skill:debug logs")).toContain('<skill name="debug"');
 		expect(expandSkillCommand).toHaveBeenCalledWith("/skill:debug logs");
 		await expect(api!.submitSkill("/skill:missing")).resolves.toBe(false);
+
+		const provenance = { source: "extension.pi-remote-control", externalId: "skill-42" };
+		await expect(api!.submitSkill("/skill:debug logs", { provenance })).resolves.toBe(true);
+		expect(submitSkill).toHaveBeenLastCalledWith("/skill:debug logs", { provenance });
 	});
 });

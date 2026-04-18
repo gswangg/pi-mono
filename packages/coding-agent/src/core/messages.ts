@@ -66,6 +66,36 @@ export interface CompactionSummaryMessage {
 	timestamp: number;
 }
 
+/**
+ * Optional origin metadata for extension-injected or bridged user messages.
+ *
+ * Set via `pi.sendUserMessage(text, { provenance })` from an extension. Pi preserves
+ * it through queueing (steer/followUp), through `message_start`/`message_end` events,
+ * and across session JSONL persistence. Provenance is never transported to the LLM —
+ * provider adapters reconstruct messages from `role` + `content` only.
+ *
+ * See `docs/message-provenance-api.md`.
+ */
+export interface MessageProvenance {
+	/**
+	 * Well-known identifier for the originating system.
+	 * Convention: dot-separated, lowercase. Extensions should use `extension.<package>`.
+	 * Examples: `"extension.pi-remote-control"`, `"channel.whatsapp"`, `"cron.nightly-review"`.
+	 */
+	source: string;
+
+	/**
+	 * Opaque external identifier stable within `source`.
+	 * E.g. the upstream remote UUID, a webhook delivery id, a cron run id.
+	 */
+	externalId?: string;
+
+	/**
+	 * Free-form metadata. Shape is per-source.
+	 */
+	metadata?: Record<string, unknown>;
+}
+
 // Extend CustomAgentMessages via declaration merging
 declare module "@mariozechner/pi-agent-core" {
 	interface CustomAgentMessages {
@@ -73,6 +103,15 @@ declare module "@mariozechner/pi-agent-core" {
 		custom: CustomMessage;
 		branchSummary: BranchSummaryMessage;
 		compactionSummary: CompactionSummaryMessage;
+	}
+}
+
+// Extend UserMessage with optional provenance metadata via declaration merging.
+// Kept in coding-agent so the fork does not touch packages/ai/.
+declare module "@mariozechner/pi-ai" {
+	interface UserMessage {
+		/** Optional origin metadata for extension-injected or bridged user messages. */
+		provenance?: MessageProvenance;
 	}
 }
 

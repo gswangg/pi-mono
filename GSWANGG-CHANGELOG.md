@@ -2,6 +2,17 @@
 
 All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/pi-mono`.
 
+## [Unreleased]
+
+### Added
+
+- **Message provenance for extension-injected user messages.** Extensions can attach opaque origin metadata via `pi.sendUserMessage(text, { provenance })` and `pi.submitSkill("/skill:...", { provenance })`. Provenance round-trips through queue (steer/followUp), `message_start`/`message_end` events, and session JSONL persistence. Never transported to the LLM. Lets remote-bridge extensions identify their own injections without content-correlation sidecars. ([spec](packages/coding-agent/docs/message-provenance-api.md))
+- `MessageProvenance` type is exported from `@mariozechner/pi-coding-agent`.
+
+### Scope
+
+- Implementation stays inside `packages/coding-agent/`. The `UserMessage` extension uses TypeScript declaration merging into `@mariozechner/pi-ai`, so `packages/ai/` and `packages/agent/` are not modified.
+
 ## [0.67.2+gswangg.1] - 2026-04-14
 
 Based on upstream [0.67.2].
