@@ -47,6 +47,9 @@ function createHandlers(): InteractiveCommandHandlers & { calls: string[] } {
 		showUserMessageSelector: vi.fn(() => {
 			calls.push("showUserMessageSelector");
 		}),
+		handleCloneCommand: vi.fn(async () => {
+			calls.push("handleCloneCommand");
+		}),
 		showTreeSelector: vi.fn(() => {
 			calls.push("showTreeSelector");
 		}),

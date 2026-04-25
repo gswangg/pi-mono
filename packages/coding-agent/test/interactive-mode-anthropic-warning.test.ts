@@ -1,7 +1,9 @@
 import { describe, expect, test, vi } from "vitest";
 import { InteractiveMode } from "../src/modes/interactive/interactive-mode.js";
 
-describe("InteractiveMode.maybeWarnAboutAnthropicSubscriptionAuth", () => {
+// gswangg fork: maybeWarnAboutAnthropicSubscriptionAuth is suppressed (see
+// commit 09d27935). Upstream's behavioral assertions don't apply here.
+describe.skip("InteractiveMode.maybeWarnAboutAnthropicSubscriptionAuth", () => {
 	test("warns once when Anthropic subscription auth is detected", async () => {
 		const fakeThis: any = {
 			anthropicSubscriptionWarningShown: false,

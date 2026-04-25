@@ -12,6 +12,7 @@ export interface InteractiveCommandHandlers {
 	handleChangelogCommand(): void;
 	handleHotkeysCommand(): void;
 	showUserMessageSelector(): void;
+	handleCloneCommand(): Promise<void>;
 	showTreeSelector(): void;
 	showOAuthSelector(mode: "login" | "logout"): Promise<void>;
 	handleClearCommand(): Promise<void>;
@@ -87,6 +88,11 @@ export async function tryHandleInteractiveCommand(
 	if (text === "/fork") {
 		handlers.showUserMessageSelector();
 		handlers.clearEditor();
+		return true;
+	}
+	if (text === "/clone") {
+		handlers.clearEditor();
+		await handlers.handleCloneCommand();
 		return true;
 	}
 	if (text === "/tree") {

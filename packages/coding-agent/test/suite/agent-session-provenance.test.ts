@@ -4,7 +4,7 @@ import { join } from "node:path";
 import type { AgentTool } from "@mariozechner/pi-agent-core";
 import { fauxAssistantMessage, fauxToolCall } from "@mariozechner/pi-ai";
 import type { ExtensionAPI, MessageProvenance } from "@mariozechner/pi-coding-agent";
-import { Type } from "@sinclair/typebox";
+import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
 import { createExtensionRuntime } from "../../src/core/extensions/loader.js";
 import type { ResourceDiagnostic, ResourceLoader } from "../../src/core/resource-loader.js";
