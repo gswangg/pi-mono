@@ -8,10 +8,14 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 - **Message provenance for extension-injected user messages.** Extensions can attach opaque origin metadata via `pi.sendUserMessage(text, { provenance })` and `pi.submitSkill("/skill:...", { provenance })`. Provenance round-trips through queue (steer/followUp), `message_start`/`message_end` events, and session JSONL persistence. Never transported to the LLM. Lets remote-bridge extensions identify their own injections without content-correlation sidecars. ([spec](packages/coding-agent/docs/message-provenance-api.md))
 - `MessageProvenance` type is exported from `@mariozechner/pi-coding-agent`.
+- **Stale zai test fixture IDs refreshed.** Test files referenced `glm-5`, `glm-4.5-flash`, `glm-4.7-flash`, `glm-4.6v` — none of which exist in the current `models.generated.ts` zai entry. Updated to existing IDs (`glm-5-turbo`, `glm-4.5-air`, `glm-5.1`). Unblocks `npm run check`.
+- **`scripts/publish-gswangg.mjs` for republishing fork artifacts under `@gswangg/*`.** Build-then-stage script that copies each package's published surface (package.json + dist + readme/changelog/docs/examples) to `/tmp/pi-mono-publish/<pkg>/`, rewrites `@mariozechner/<our-pkg>` → `@gswangg/<our-pkg>` (targeted to our 4 packages only — `@mariozechner/jiti` and other third-party scoped deps are preserved), then `npm publish --access public --ignore-scripts` from each staged dir. Source tree stays untouched — fork's internal `@mariozechner/*` references are preserved so upstream merges don't conflict on names. See `decisions.md` → "Pi Fork Publishing under @gswangg" for rationale.
+- **First @gswangg publish (2026-04-26):** `@gswangg/pi-coding-agent`, `@gswangg/pi-ai`, `@gswangg/pi-tui`, `@gswangg/pi-agent-core` all published at version `0.70.2`. Note: pi-coding-agent's source carries `0.70.2+gswangg.1`, but npm normalizes `+build` metadata away on publish — registry stored as `0.70.2`. Subsequent fork iterations must use prerelease tags instead (scheme: `<next-upstream-patch>-gswangg.<n>`, e.g. `0.70.3-gswangg.1`). See `decisions.md` → "Pi Fork Publishing under @gswangg".
 
 ### Scope
 
 - Implementation stays inside `packages/coding-agent/`. The `UserMessage` extension uses TypeScript declaration merging into `@mariozechner/pi-ai`, so `packages/ai/` and `packages/agent/` are not modified.
+- Republished packages (minimum set, what `gswangg/pi-remote-control` currently consumes externally + their transitive workspace deps): `@gswangg/pi-coding-agent`, `@gswangg/pi-ai`, `@gswangg/pi-tui`, `@gswangg/pi-agent-core`. Other fork packages (`mom`, `web-ui`, `pods`) are not republished until something consumes them externally.
 
 ## [0.67.2+gswangg.1] - 2026-04-14
 
