@@ -6,6 +6,18 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.70.6+gswangg.3] - 2026-04-30
+
+Based on upstream [0.70.6] plus upstream main `e91a303c`.
+
+### Merged from upstream
+
+- Synced upstream main from `156a9052` through `e91a303c`, including the attested `@mariozechner/clipboard` dependency update for package-manager trust policies.
+
+### Changed
+
+- Bumped the active fork package version from `0.70.6+gswangg.2` to `0.70.6+gswangg.3`.
+
 ## [0.70.6+gswangg.2] - 2026-04-30
 
 Based on upstream [0.70.6] plus upstream main `156a9052`.

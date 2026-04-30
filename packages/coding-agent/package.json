@@ -1,6 +1,6 @@
 {
 	"name": "@mariozechner/pi-coding-agent",
-	"version": "0.70.6+gswangg.2",
+	"version": "0.70.6+gswangg.3",
 	"description": "Coding agent CLI with read, bash, edit, write tools and session management",
 	"type": "module",
 	"piConfig": {
@@ -67,7 +67,7 @@
 		}
 	},
 	"optionalDependencies": {
-		"@mariozechner/clipboard": "^0.3.3"
+		"@mariozechner/clipboard": "^0.3.5"
 	},
 	"devDependencies": {
 		"@types/diff": "^7.0.2",
