@@ -6,6 +6,19 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.70.6+gswangg.2] - 2026-04-30
+
+Based on upstream [0.70.6] plus upstream main `156a9052`.
+
+### Changed
+
+- Bumped the active fork package version from `0.70.6+gswangg.1` to `0.70.6+gswangg.2`.
+- Removed the fork's hardcoded Anthropic subscription-warning no-op and now relies on upstream's `warnings.anthropicExtraUsage: false` setting for Greg's stock config.
+
+### Removed
+
+- Dropped a fork-only z.ai test assertion cleanup that upstream no longer needs.
+
 ## [0.70.6+gswangg.1] - 2026-04-30
 
 Based on upstream [0.70.6] plus upstream main `156a9052`.
