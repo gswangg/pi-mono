@@ -4,9 +4,20 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 ## [Unreleased]
 
+No unreleased fork-only changes.
+
+## [0.71.0+gswangg.1] - 2026-04-30
+
+Based on upstream [0.71.0].
+
+### Merged from upstream
+
+- Synced upstream release `v0.71.0`, including Cloudflare AI Gateway provider support, Google Gemini CLI / Antigravity provider removal, WSL clipboard paste fixes, session usage tooling, and upstream removal of the `mom` and `pods` packages.
+
 ### Changed
 
-- Changed the upstream fork wake monitor to alert only on new stable upstream release tags newer than the fork's coding-agent base version, instead of waking for every upstream `main` commit.
+- Bumped the active fork package version from `0.70.6+gswangg.3` to `0.71.0+gswangg.1`.
+- Kept the fork wake monitor release-only: it alerts on new stable upstream release tags newer than the fork's coding-agent base version, not on every upstream `main` commit.
 
 ## [0.70.6+gswangg.3] - 2026-04-30
 
