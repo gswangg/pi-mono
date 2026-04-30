@@ -4,8 +4,25 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 ## [Unreleased]
 
+No unreleased fork-only changes.
+
+## [0.70.6+gswangg.1] - 2026-04-30
+
+Based on upstream [0.70.6] plus upstream main `156a9052`.
+
+### Merged from upstream
+
+- Synced upstream main from the prior fork base through `156a9052`, including upstream releases v0.70.3-v0.70.6.
+
+### Changed
+
+- Bumped the active fork package version from `0.70.2+gswangg.1` to `0.70.6+gswangg.1`.
+- Preserved the gswangg fork behavior that suppresses the Anthropic subscription auth warning.
+
 ### Added
 
+- **Remote heavy-test workflow.** `.github/workflows/fork-heavy-tests.yml` runs repo build/check and package test matrices on GitHub-hosted runners by default, with a configurable `runner` input / `PI_HEAVY_TEST_RUNNER` repo variable for Blacksmith runner labels once available. Keeps broad test/build sweeps off the EC2 dev box.
+- **Pi session commit trailers.** `.husky/commit-msg` chains to `~/.pi/agent/git-template/hooks/commit-msg`, so fork commits made from pi-spawned git commands record `Pi-Session-Id` / `Pi-Session-File` trailers in git log.
 - **Message provenance for extension-injected user messages.** Extensions can attach opaque origin metadata via `pi.sendUserMessage(text, { provenance })` and `pi.submitSkill("/skill:...", { provenance })`. Provenance round-trips through queue (steer/followUp), `message_start`/`message_end` events, and session JSONL persistence. Never transported to the LLM. Lets remote-bridge extensions identify their own injections without content-correlation sidecars. ([spec](packages/coding-agent/docs/message-provenance-api.md))
 - `MessageProvenance` type is exported from `@mariozechner/pi-coding-agent`.
 - **Stale zai test fixture IDs refreshed.** Test files referenced `glm-5`, `glm-4.5-flash`, `glm-4.7-flash`, `glm-4.6v` — none of which exist in the current `models.generated.ts` zai entry. Updated to existing IDs (`glm-5-turbo`, `glm-4.5-air`, `glm-5.1`). Unblocks `npm run check`.

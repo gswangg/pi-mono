@@ -1,0 +1,5 @@
+#!/bin/sh
+# pi git provenance hook
+if [ -x "$HOME/.pi/agent/git-template/hooks/commit-msg" ]; then
+  "$HOME/.pi/agent/git-template/hooks/commit-msg" "$@"
+fi

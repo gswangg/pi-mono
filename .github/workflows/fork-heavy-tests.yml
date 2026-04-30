@@ -1,0 +1,93 @@
+name: Fork Heavy Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: "Runner label. Use ubuntu-latest unless Blacksmith is installed for this repository/organization."
+        required: false
+        default: "ubuntu-latest"
+        type: string
+      run_build_check:
+        description: "Run repo build + check job"
+        required: false
+        default: true
+        type: boolean
+      run_package_tests:
+        description: "Run package test matrix"
+        required: false
+        default: true
+        type: boolean
+  schedule:
+    - cron: "17 9 * * *"
+
+concurrency:
+  group: fork-heavy-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-check:
+    if: ${{ github.event_name == 'schedule' || inputs.run_build_check }}
+    runs-on: ${{ inputs.runner || vars.PI_HEAVY_TEST_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev fd-find ripgrep
+          sudo ln -sf "$(which fdfind)" /usr/local/bin/fd
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Check
+        run: npm run check
+
+  package-tests:
+    if: ${{ github.event_name == 'schedule' || inputs.run_package_tests }}
+    runs-on: ${{ inputs.runner || vars.PI_HEAVY_TEST_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - agent
+          - ai
+          - coding-agent
+          - tui
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev fd-find ripgrep
+          sudo ln -sf "$(which fdfind)" /usr/local/bin/fd
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test ${{ matrix.package }}
+        run: cd packages/${{ matrix.package }} && npm test
