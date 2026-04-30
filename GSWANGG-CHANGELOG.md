@@ -4,7 +4,9 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 ## [Unreleased]
 
-No unreleased fork-only changes.
+### Changed
+
+- Changed the upstream fork wake monitor to alert only on new stable upstream release tags newer than the fork's coding-agent base version, instead of waking for every upstream `main` commit.
 
 ## [0.70.6+gswangg.3] - 2026-04-30
 
