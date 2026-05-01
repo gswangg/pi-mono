@@ -6,6 +6,18 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.71.1+gswangg.1] - 2026-05-01
+
+Based on upstream [0.71.1].
+
+### Merged from upstream
+
+- Synced upstream release `v0.71.1`, including the cached OpenAI Codex WebSocket transport for ChatGPT subscription auth and updated subscription-provider notes.
+
+### Changed
+
+- Bumped the active fork package version from `0.71.0+gswangg.1` to `0.71.1+gswangg.1`.
+
 ## [0.71.0+gswangg.1] - 2026-04-30
 
 Based on upstream [0.71.0].
