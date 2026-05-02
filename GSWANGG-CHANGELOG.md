@@ -6,6 +6,18 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.72.1+gswangg.1] - 2026-05-02
+
+Based on upstream [0.72.1].
+
+### Merged from upstream
+
+- Synced upstream release `v0.72.1`, including the Codex transport-option fix and regenerated model metadata.
+
+### Changed
+
+- Bumped the active fork package version from `0.72.0+gswangg.2` to `0.72.1+gswangg.1`.
+
 ## [0.72.0+gswangg.2] - 2026-05-02
 
 Based on upstream [0.72.0].
