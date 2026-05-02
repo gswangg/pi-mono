@@ -4,7 +4,9 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 ## [Unreleased]
 
-No unreleased fork-only changes.
+### Fixed
+
+- Pinned the fork release wake monitor to an explicitly configured target conversation (`~/.pi/agent/state/pi-fork-upstream-watch-target.json`) instead of routing through dynamic current-session state.
 
 ## [0.72.1+gswangg.1] - 2026-05-02
 

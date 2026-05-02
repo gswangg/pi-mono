@@ -8,7 +8,7 @@ import { basename, dirname, join, resolve } from "node:path";
 const DEFAULT_INTERVAL_MS = 10 * 60 * 1000;
 const DEFAULT_REPO = "/workspace/pi-mono";
 const DEFAULT_WAKE_ROOT = join(homedir(), ".pi", "agent", "wake");
-const DEFAULT_SESSION_STATE = join(homedir(), ".pi", "agent", "state", "git-provenance-current-session.json");
+const DEFAULT_TARGET_STATE = join(homedir(), ".pi", "agent", "state", "pi-fork-upstream-watch-target.json");
 const DEFAULT_WATCH_STATE = join(homedir(), ".pi", "agent", "state", "pi-fork-upstream-watch.json");
 const VERSION_PACKAGE_JSON = "packages/coding-agent/package.json";
 const SOURCE = "pi-fork-upstream-watch";
@@ -17,15 +17,19 @@ const TYPE = "upstream_release";
 function usage() {
 	console.error(`usage: fork-upstream-watch.mjs [options]
 
-Wakes the active pi session only when upstream publishes a stable release tag newer
-than the fork's coding-agent base version. It intentionally ignores ordinary
-upstream/main commits between releases.
+Wakes a configured target pi session only when upstream publishes a stable
+release tag newer than the fork's coding-agent base version. It intentionally
+ignores ordinary upstream/main commits between releases and never routes to a
+"current" or most-recent session.
 
 Options:
-  --repo <path>             pi-mono repo path (default: ${DEFAULT_REPO})
-  --wake-root <path>        wake root (default: ${DEFAULT_WAKE_ROOT})
-  --session-state <path>    active pi session state file (default: ${DEFAULT_SESSION_STATE})
-  --state <path>            watcher state file (default: ${DEFAULT_WATCH_STATE})
+  --repo <path>                 pi-mono repo path (default: ${DEFAULT_REPO})
+  --wake-root <path>            wake root (default: ${DEFAULT_WAKE_ROOT})
+  --target <path>               target conversation JSON file (default: ${DEFAULT_TARGET_STATE})
+  --target-session-id <id>      target conversation/session id (overrides --target)
+  --target-session-file <path>  target session JSONL path (optional with --target-session-id)
+  --target-cwd <path>           target session cwd (optional with --target-session-id)
+  --state <path>                watcher state file (default: ${DEFAULT_WATCH_STATE})
   --interval-ms <n>         poll interval (default: ${DEFAULT_INTERVAL_MS})
   --once                    run one poll and exit
   --dry-run                 do not write wake events or update notification state
@@ -37,7 +41,10 @@ function parseArgs(argv) {
 	const options = {
 		repo: DEFAULT_REPO,
 		wakeRoot: DEFAULT_WAKE_ROOT,
-		sessionState: DEFAULT_SESSION_STATE,
+		target: DEFAULT_TARGET_STATE,
+		targetSessionId: undefined,
+		targetSessionFile: undefined,
+		targetCwd: undefined,
 		state: DEFAULT_WATCH_STATE,
 		intervalMs: DEFAULT_INTERVAL_MS,
 		once: false,
@@ -51,7 +58,10 @@ function parseArgs(argv) {
 		};
 		if (arg === "--repo") options.repo = next();
 		else if (arg === "--wake-root") options.wakeRoot = next();
-		else if (arg === "--session-state") options.sessionState = next();
+		else if (arg === "--target") options.target = next();
+		else if (arg === "--target-session-id") options.targetSessionId = next();
+		else if (arg === "--target-session-file") options.targetSessionFile = next();
+		else if (arg === "--target-cwd") options.targetCwd = next();
 		else if (arg === "--state") options.state = next();
 		else if (arg === "--interval-ms") options.intervalMs = Number.parseInt(next(), 10);
 		else if (arg === "--once") options.once = true;
@@ -162,26 +172,22 @@ function listUpstreamReleaseTags(repo) {
 		.sort((a, b) => compareSemver(b.version, a.version));
 }
 
-function isProcessAlive(pid) {
-	if (!Number.isInteger(pid) || pid <= 0) return false;
-	try {
-		process.kill(pid, 0);
-		return true;
-	} catch {
-		return false;
+function loadConfiguredTarget(options) {
+	if (typeof options.targetSessionId === "string" && options.targetSessionId.length > 0) {
+		return {
+			sessionId: options.targetSessionId,
+			sessionFile: typeof options.targetSessionFile === "string" ? options.targetSessionFile : undefined,
+			cwd: typeof options.targetCwd === "string" ? options.targetCwd : undefined,
+		};
 	}
-}
 
-function loadActiveSession(sessionStateFile) {
-	const state = readJson(sessionStateFile, undefined);
-	if (!state || typeof state !== "object") return undefined;
-	if (typeof state.sessionId !== "string" || !state.sessionId) return undefined;
-	if (!isProcessAlive(state.pid)) return undefined;
+	const target = readJson(resolve(options.target), undefined);
+	if (!target || typeof target !== "object") return undefined;
+	if (typeof target.sessionId !== "string" || !target.sessionId) return undefined;
 	return {
-		sessionId: state.sessionId,
-		sessionFile: typeof state.sessionFile === "string" ? state.sessionFile : undefined,
-		cwd: typeof state.cwd === "string" ? state.cwd : undefined,
-		pid: state.pid,
+		sessionId: target.sessionId,
+		sessionFile: typeof target.sessionFile === "string" ? target.sessionFile : undefined,
+		cwd: typeof target.cwd === "string" ? target.cwd : undefined,
 	};
 }
 
@@ -249,9 +255,9 @@ Only after those are complete should this wake event be acknowledged with wake_d
 async function poll(options) {
 	const repo = resolve(options.repo);
 	const wakeRoot = resolve(options.wakeRoot);
-	const session = loadActiveSession(resolve(options.sessionState));
-	if (!session) {
-		console.log(`${new Date().toISOString()} no live pi session state; skipping`);
+	const target = loadConfiguredTarget(options);
+	if (!target) {
+		console.log(`${new Date().toISOString()} no configured target conversation; skipping`);
 		return;
 	}
 
@@ -270,7 +276,7 @@ async function poll(options) {
 	if (!forkSemver) throw new Error(`origin/main ${VERSION_PACKAGE_JSON} version is not semver: ${forkVersion}`);
 
 	const state = readJson(resolve(options.state), { notifications: {} });
-	const notificationKey = `${session.sessionId}:${latestRelease.name}`;
+	const notificationKey = `${target.sessionId}:${latestRelease.name}`;
 	const checkedAt = new Date().toISOString();
 
 	if (compareSemver(latestRelease.version, forkSemver) <= 0) {
@@ -280,6 +286,7 @@ async function poll(options) {
 			releaseSha,
 			originVersion: forkVersion,
 			originSha,
+			targetSessionId: target.sessionId,
 			checkedAt,
 		};
 		if (!options.dryRun) writeJsonAtomic(resolve(options.state), state);
@@ -289,8 +296,8 @@ async function poll(options) {
 		return;
 	}
 
-	if (state.notifications?.[notificationKey] || hasExistingEvent(wakeRoot, session.sessionId, latestRelease.name)) {
-		console.log(`${checkedAt} release already notified for ${latestRelease.name} -> ${session.sessionId}`);
+	if (state.notifications?.[notificationKey] || hasExistingEvent(wakeRoot, target.sessionId, latestRelease.name)) {
+		console.log(`${checkedAt} release already notified for ${latestRelease.name} -> ${target.sessionId}`);
 		return;
 	}
 
@@ -302,7 +309,7 @@ async function poll(options) {
 	const id = safeId(`pi-fork-release-${checkedAt.replace(/[-:.]/g, "")}-${latestRelease.name}`);
 	const event = {
 		id,
-		sessionId: session.sessionId,
+		sessionId: target.sessionId,
 		ts: checkedAt,
 		source: SOURCE,
 		type: TYPE,
@@ -327,7 +334,7 @@ async function poll(options) {
 			originSha,
 			commitCount,
 			commits,
-			sessionFile: session.sessionFile,
+			sessionFile: target.sessionFile,
 		},
 	};
 
@@ -346,6 +353,7 @@ async function poll(options) {
 		releaseSha,
 		originVersion: forkVersion,
 		originSha,
+		targetSessionId: target.sessionId,
 		sentAt: checkedAt,
 	};
 	writeJsonAtomic(resolve(options.state), state);
