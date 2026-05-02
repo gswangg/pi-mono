@@ -6,6 +6,19 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.72.0+gswangg.2] - 2026-05-02
+
+Based on upstream [0.72.0].
+
+### Fixed
+
+- Preserved `xhigh` thinking support for known GPT-5.2/5.3/5.4/5.5, Claude Opus 4.6/4.7, and DeepSeek V4 identities even when a custom registered model lacks generated `thinkingLevelMap` metadata.
+- Ensured Bedrock Claude Opus 4.7 application-profile/custom models map `xhigh` to provider effort `xhigh`, even if copied from Opus 4.6 metadata where `xhigh` maps to `max`.
+
+### Changed
+
+- Bumped the active fork package version from `0.72.0+gswangg.1` to `0.72.0+gswangg.2`.
+
 ## [0.72.0+gswangg.1] - 2026-05-02
 
 Based on upstream [0.72.0].

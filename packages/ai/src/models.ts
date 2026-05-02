@@ -47,13 +47,43 @@ export function calculateCost<TApi extends Api>(model: Model<TApi>, usage: Usage
 
 const EXTENDED_THINKING_LEVELS: ModelThinkingLevel[] = ["off", "minimal", "low", "medium", "high", "xhigh"];
 
+function getModelMatchCandidates<TApi extends Api>(model: Model<TApi>): string[] {
+	const values = model.name ? [model.id, model.name] : [model.id];
+	return values.flatMap((value) => {
+		const lower = value.toLowerCase();
+		return [lower, lower.replace(/[\s_.:]+/g, "-")];
+	});
+}
+
+function modelIdentityIncludes<TApi extends Api>(model: Model<TApi>, needles: string[]): boolean {
+	const candidates = getModelMatchCandidates(model);
+	return needles.some((needle) => candidates.some((candidate) => candidate.includes(needle)));
+}
+
+function supportsXHighByIdentity<TApi extends Api>(model: Model<TApi>): boolean {
+	return (
+		modelIdentityIncludes(model, [
+			"gpt-5.2",
+			"gpt-5-2",
+			"gpt-5.3",
+			"gpt-5-3",
+			"gpt-5.4",
+			"gpt-5-4",
+			"gpt-5.5",
+			"gpt-5-5",
+		]) ||
+		modelIdentityIncludes(model, ["opus-4.6", "opus-4-6", "opus-4.7", "opus-4-7"]) ||
+		(model.api === "openai-completions" && modelIdentityIncludes(model, ["deepseek-v4"]))
+	);
+}
+
 export function getSupportedThinkingLevels<TApi extends Api>(model: Model<TApi>): ModelThinkingLevel[] {
 	if (!model.reasoning) return ["off"];
 
 	return EXTENDED_THINKING_LEVELS.filter((level) => {
 		const mapped = model.thinkingLevelMap?.[level];
 		if (mapped === null) return false;
-		if (level === "xhigh") return mapped !== undefined;
+		if (level === "xhigh") return mapped !== undefined || supportsXHighByIdentity(model);
 		return true;
 	});
 }
