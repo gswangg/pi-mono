@@ -6,6 +6,18 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.72.0+gswangg.1] - 2026-05-02
+
+Based on upstream [0.72.0].
+
+### Merged from upstream
+
+- Synced upstream release `v0.72.0`, including Xiaomi MiMo provider support, model thinking-level metadata, the coding-agent post-turn stop callback, registered model base URL fixes, OpenRouter DeepSeek V4 reasoning handling, and self-update detection repair.
+
+### Changed
+
+- Bumped the active fork package version from `0.71.1+gswangg.1` to `0.72.0+gswangg.1`.
+
 ## [0.71.1+gswangg.1] - 2026-05-01
 
 Based on upstream [0.71.1].
