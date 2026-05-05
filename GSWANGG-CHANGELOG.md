@@ -4,9 +4,23 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 ## [Unreleased]
 
+No unreleased fork-only changes.
+
+## [0.73.0+gswangg.1] - 2026-05-05
+
+Based on upstream [0.73.0].
+
+### Merged from upstream
+
+- Synced upstream release `v0.73.0`, including incremental bash output streaming, compact read rendering, Codex WebSocket session cleanup/fallback fixes, Xiaomi token-plan providers, environment-sensitive test stabilization, and TUI exact fuzzy-match prioritization.
+
 ### Fixed
 
 - Pinned the fork release wake monitor to an explicitly configured target conversation (`~/.pi/agent/state/pi-fork-upstream-watch-target.json`) instead of routing through dynamic current-session state.
+
+### Changed
+
+- Bumped the active fork package version from `0.72.1+gswangg.1` to `0.73.0+gswangg.1`.
 
 ## [0.72.1+gswangg.1] - 2026-05-02
 

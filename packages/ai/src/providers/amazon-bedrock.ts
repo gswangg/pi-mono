@@ -494,8 +494,8 @@ function supportsAdaptiveThinking(modelId: string, modelName?: string): boolean 
 	return candidates.some((s) => s.includes("opus-4-6") || s.includes("opus-4-7") || s.includes("sonnet-4-6"));
 }
 
-function supportsOpus47XHigh(modelId: string, modelName?: string): boolean {
-	const candidates = getModelMatchCandidates(modelId, modelName);
+function supportsNativeXhighEffort(model: Model<"bedrock-converse-stream">): boolean {
+	const candidates = getModelMatchCandidates(model.id, model.name);
 	return candidates.some((s) => s.includes("opus-4-7"));
 }
 
@@ -503,7 +503,7 @@ function mapThinkingLevelToEffort(
 	model: Model<"bedrock-converse-stream">,
 	level: SimpleStreamOptions["reasoning"],
 ): "low" | "medium" | "high" | "xhigh" | "max" {
-	if (level === "xhigh" && supportsOpus47XHigh(model.id, model.name)) return "xhigh";
+	if (level === "xhigh" && supportsNativeXhighEffort(model)) return "xhigh";
 
 	const mapped = level ? model.thinkingLevelMap?.[level] : undefined;
 	if (typeof mapped === "string") return mapped as "low" | "medium" | "high" | "xhigh" | "max";
