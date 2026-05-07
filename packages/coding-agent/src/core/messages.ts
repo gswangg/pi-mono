@@ -5,8 +5,8 @@
  * and provides a transformer to convert them to LLM-compatible messages.
  */
 
-import type { AgentMessage } from "@mariozechner/pi-agent-core";
-import type { ImageContent, Message, TextContent } from "@mariozechner/pi-ai";
+import type { AgentMessage } from "@earendil-works/pi-agent-core";
+import type { ImageContent, Message, TextContent } from "@earendil-works/pi-ai";
 
 export const COMPACTION_SUMMARY_PREFIX = `The conversation history before this point was compacted into the following summary:
 
@@ -97,7 +97,7 @@ export interface MessageProvenance {
 }
 
 // Extend CustomAgentMessages via declaration merging
-declare module "@mariozechner/pi-agent-core" {
+declare module "@earendil-works/pi-agent-core" {
 	interface CustomAgentMessages {
 		bashExecution: BashExecutionMessage;
 		custom: CustomMessage;
@@ -108,7 +108,7 @@ declare module "@mariozechner/pi-agent-core" {
 
 // Extend UserMessage with optional provenance metadata via declaration merging.
 // Kept in coding-agent so the fork does not touch packages/ai/.
-declare module "@mariozechner/pi-ai" {
+declare module "@earendil-works/pi-ai" {
 	interface UserMessage {
 		/** Optional origin metadata for extension-injected or bridged user messages. */
 		provenance?: MessageProvenance;

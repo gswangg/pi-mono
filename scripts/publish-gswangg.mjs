@@ -3,7 +3,7 @@
 // See decisions.md "Pi Fork Publishing under @gswangg" and GSWANGG-CHANGELOG.md.
 //
 // Defaults to dry-stage: builds + stages each package to /tmp/pi-mono-publish/<pkg>/
-// with @mariozechner/* rewritten to @gswangg/*. No network.
+// with @earendil-works/* rewritten to @gswangg/*. No network.
 //
 //   --publish      actually run `npm publish --access public --ignore-scripts`
 //                  from each staged dir
@@ -39,11 +39,13 @@ const flags = {
 	skipBuild: args.includes("--skip-build"),
 };
 
+const SOURCE_SCOPE = "@earendil-works";
+
 // Substring rewrite is unsafe across future package names that might overlap
-// (e.g. a hypothetical @mariozechner/pi-ai-extra). Use a negative-lookahead
+// (e.g. a hypothetical @earendil-works/pi-ai-extra). Use a negative-lookahead
 // regex per target so only exact full-name boundaries match.
 const rewriters = PACKAGES.map(({ suffix }) => ({
-	re: new RegExp(`@mariozechner/${suffix}(?![A-Za-z0-9_-])`, "g"),
+	re: new RegExp(`${SOURCE_SCOPE}/${suffix}(?![A-Za-z0-9_-])`, "g"),
 	replacement: `@gswangg/${suffix}`,
 }));
 

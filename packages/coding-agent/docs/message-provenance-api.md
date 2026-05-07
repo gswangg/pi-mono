@@ -61,10 +61,10 @@ export interface MessageProvenance {
 }
 ```
 
-The optional field is attached to `UserMessage` via TypeScript declaration merging into `@mariozechner/pi-ai`, following the same pattern already used for custom message roles:
+The optional field is attached to `UserMessage` via TypeScript declaration merging into `@earendil-works/pi-ai`, following the same pattern already used for custom message roles:
 
 ```ts
-declare module "@mariozechner/pi-ai" {
+declare module "@earendil-works/pi-ai" {
     interface UserMessage {
         /** Optional origin metadata for extension-injected or bridged user messages. */
         provenance?: MessageProvenance;

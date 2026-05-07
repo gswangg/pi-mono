@@ -6,6 +6,20 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.74.0+gswangg.1] - 2026-05-07
+
+Based on upstream [0.74.0].
+
+### Merged from upstream
+
+- Synced upstream release `v0.74.0`, including the package scope migration from `@mariozechner/*` to `@earendil-works/*`, the next-cycle changelog setup, and the read-tool stats script.
+
+### Changed
+
+- Bumped the active fork package version from `0.73.1+gswangg.1` to `0.74.0+gswangg.1`.
+- Updated the fork `publish-gswangg` republish script to rewrite upstream `@earendil-works/*` package references into `@gswangg/*` staged packages.
+- Made the self-update package-name fallback test fixture use a future version so it remains valid across fork build-metadata releases.
+
 ## [0.73.1+gswangg.1] - 2026-05-07
 
 Based on upstream [0.73.1].
