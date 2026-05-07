@@ -6,6 +6,18 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.73.1+gswangg.1] - 2026-05-07
+
+Based on upstream [0.73.1].
+
+### Merged from upstream
+
+- Synced upstream release `v0.73.1`, including renamed self-update package support, kitty image ID fixes, interleaved/mixed stream event handling, Codex OAuth stderr cleanup, OpenAI Responses reasoning text delta handling, Kimi alias normalization, and the upstream `jiti` 2.7 switch.
+
+### Changed
+
+- Bumped the active fork package version from `0.73.0+gswangg.1` to `0.73.1+gswangg.1`.
+
 ## [0.73.0+gswangg.1] - 2026-05-05
 
 Based on upstream [0.73.0].
