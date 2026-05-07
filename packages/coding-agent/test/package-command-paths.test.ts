@@ -201,7 +201,9 @@ else fs.writeFileSync(${JSON.stringify(recordPath)},JSON.stringify(args));
 			value: join(selfPackageDir, "dist", "cli.js"),
 			configurable: true,
 		});
-		const fetchMock = vi.fn(async () => Response.json({ version: "0.73.1" }));
+		// Use a newer upstream version than the fork's build-metadata version so
+		// the test still exercises self-update on fork builds.
+		const fetchMock = vi.fn(async () => Response.json({ version: "0.73.2" }));
 		vi.stubGlobal("fetch", fetchMock);
 
 		const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});

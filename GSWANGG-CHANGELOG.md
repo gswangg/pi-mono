@@ -17,6 +17,7 @@ Based on upstream [0.73.1].
 ### Changed
 
 - Bumped the active fork package version from `0.73.0+gswangg.1` to `0.73.1+gswangg.1`.
+- Adjusted the upstream self-update package-name fallback test fixture to request a version newer than the fork's build-metadata version, preserving the fork's "same upstream version is not an update" behavior.
 
 ## [0.73.0+gswangg.1] - 2026-05-05
 
