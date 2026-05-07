@@ -40,9 +40,9 @@
 		"concurrently": "^9.2.1",
 		"husky": "^9.1.7",
 		"jiti": "^2.7.0",
+		"shx": "^0.4.0",
 		"tsx": "^4.20.3",
-		"typescript": "^5.9.2",
-		"shx": "^0.4.0"
+		"typescript": "^5.9.2"
 	},
 	"engines": {
 		"node": ">=20.0.0"
@@ -61,6 +61,8 @@
 	"optionalDependencies": {
 		"@parcel/watcher-linux-arm64-glibc": "^2.5.6",
 		"@parcel/watcher-linux-x64-glibc": "^2.5.6",
+		"@rollup/rollup-linux-arm64-gnu": "^4.60.3",
+		"@rollup/rollup-linux-x64-gnu": "^4.60.3",
 		"@tailwindcss/oxide-linux-arm64-gnu": "^4.2.4",
 		"@tailwindcss/oxide-linux-x64-gnu": "^4.2.4",
 		"lightningcss-linux-arm64-gnu": "^1.32.0",
