@@ -57,5 +57,13 @@
 		"gaxios": {
 			"rimraf": "6.1.2"
 		}
+	},
+	"optionalDependencies": {
+		"@parcel/watcher-linux-arm64-glibc": "^2.5.6",
+		"@parcel/watcher-linux-x64-glibc": "^2.5.6",
+		"@tailwindcss/oxide-linux-arm64-gnu": "^4.2.4",
+		"@tailwindcss/oxide-linux-x64-gnu": "^4.2.4",
+		"lightningcss-linux-arm64-gnu": "^1.32.0",
+		"lightningcss-linux-x64-gnu": "^1.32.0"
 	}
 }

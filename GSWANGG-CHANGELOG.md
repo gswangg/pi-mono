@@ -18,6 +18,7 @@ Based on upstream [0.74.0].
 
 - Bumped the active fork package version from `0.73.1+gswangg.1` to `0.74.0+gswangg.1`.
 - Updated the fork `publish-gswangg` republish script to rewrite upstream `@earendil-works/*` package references into `@gswangg/*` staged packages.
+- Added Linux x64/arm64 optional native packages for Tailwind's `@parcel/watcher`, `@tailwindcss/oxide`, and `lightningcss` so clean Linux CI installs can build the web UI even when the lockfile was generated on another platform.
 - Made the self-update package-name fallback test fixture use a future version so it remains valid across fork build-metadata releases.
 
 ## [0.73.1+gswangg.1] - 2026-05-07
