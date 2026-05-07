@@ -42,11 +42,14 @@ afterEach(() => {
 	}
 });
 
-function createNpmPrefixInstall(template = "pi-prefix-"): { prefix: string; packageDir: string } {
+function createNpmPrefixInstall(
+	template = "pi-prefix-",
+	packageName = "@earendil-works/pi-coding-agent",
+): { prefix: string; packageDir: string } {
 	const prefix = mkdtempSync(join(tmpdir(), template));
 	const root = join(prefix, "lib", "node_modules");
-	const scopeDir = join(root, "@earendil-works");
-	const packageDir = join(scopeDir, "pi-coding-agent");
+	const [scope, name] = packageName.split("/");
+	const packageDir = name ? join(root, scope, name) : join(root, packageName);
 	mkdirSync(packageDir, { recursive: true });
 	tempDir = prefix;
 	process.env.PI_PACKAGE_DIR = packageDir;
@@ -175,7 +178,7 @@ describe("detectInstallMethod", () => {
 	});
 
 	test("self-updates renamed packages from the current install prefix", () => {
-		const { prefix } = createNpmPrefixInstall();
+		const { prefix } = createNpmPrefixInstall("pi-prefix-", "@mariozechner/pi-coding-agent");
 
 		const command = getSelfUpdateCommand("@mariozechner/pi-coding-agent", undefined, "@new-scope/pi");
 
