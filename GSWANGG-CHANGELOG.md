@@ -6,6 +6,19 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.75.2+gswangg.1] - 2026-05-18
+
+Based on upstream [0.75.2].
+
+### Merged from upstream
+
+- Synced upstream release `v0.75.2`, including Bun undici startup fixes, Xiaomi reasoning replay compatibility, Windows external editor/self-update fixes, pnpm v11 global install detection, Windows pnpm self-update support, and cross-spawn-based Windows npm-family command execution.
+
+### Changed
+
+- Bumped the active fork package version from `0.75.1+gswangg.1` to `0.75.2+gswangg.1`.
+- Kept the fork-only Linux x64/arm64 optional native dependency pins in the root package manifest so clean Linux CI installs can build Tailwind/web-ui and Rollup-dependent packages.
+
 ## [0.75.1+gswangg.1] - 2026-05-18
 
 Based on upstream [0.75.1], incorporating upstream [0.74.1] and [0.75.0].
