@@ -6,6 +6,19 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.75.1+gswangg.1] - 2026-05-18
+
+Based on upstream [0.75.1], incorporating upstream [0.74.1] and [0.75.0].
+
+### Merged from upstream
+
+- Synced upstream releases through `v0.75.1`, including image generation support, Together AI provider support, Windows ARM64 binary artifacts, Node 22.19+ requirement, explicit XML prompt/context boundaries, user-scoped npm package installs, undici fetch/proxy fixes, OpenAI Codex model metadata updates, Xiaomi/OpenCode Go/Bedrock provider fixes, config selector sizing fixes, and npm Windows shim handling.
+
+### Changed
+
+- Bumped the active fork package version from `0.74.0+gswangg.1` to `0.75.1+gswangg.1`.
+- Kept the fork-only Linux x64/arm64 optional native dependency pins in the root package manifest so clean Linux CI installs can build Tailwind/web-ui and Rollup-dependent packages.
+
 ## [0.74.0+gswangg.1] - 2026-05-07
 
 Based on upstream [0.74.0].
