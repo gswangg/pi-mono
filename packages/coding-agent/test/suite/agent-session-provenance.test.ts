@@ -6,12 +6,12 @@ import { fauxAssistantMessage, fauxToolCall } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, MessageProvenance } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
-import { createExtensionRuntime } from "../../src/core/extensions/loader.js";
-import type { ResourceDiagnostic, ResourceLoader } from "../../src/core/resource-loader.js";
-import type { SessionMessageEntry } from "../../src/core/session-manager.js";
-import type { Skill } from "../../src/core/skills.js";
-import { createSyntheticSourceInfo } from "../../src/core/source-info.js";
-import { createHarness, getMessageText, type Harness } from "./harness.js";
+import { createExtensionRuntime } from "../../src/core/extensions/loader.ts";
+import type { ResourceDiagnostic, ResourceLoader } from "../../src/core/resource-loader.ts";
+import type { SessionMessageEntry } from "../../src/core/session-manager.ts";
+import type { Skill } from "../../src/core/skills.ts";
+import { createSyntheticSourceInfo } from "../../src/core/source-info.ts";
+import { createHarness, getMessageText, type Harness } from "./harness.ts";
 
 /**
  * Integration tests for message provenance (see docs/message-provenance-api.md).

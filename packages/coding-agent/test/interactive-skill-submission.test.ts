@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { trySubmitInteractiveSkill } from "../src/modes/interactive/submit-skill.js";
+import { trySubmitInteractiveSkill } from "../src/modes/interactive/submit-skill.ts";
 
 function createHandlers() {
 	return {

@@ -4,7 +4,7 @@ export interface InteractiveSkillState {
 	isKnownSkillCommand(commandLine: string): boolean;
 }
 
-import type { MessageProvenance } from "../../core/messages.js";
+import type { MessageProvenance } from "../../core/messages.ts";
 
 export interface InteractiveSkillHandlers {
 	submitPrompt(

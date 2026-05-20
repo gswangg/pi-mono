@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
-import type { ExtensionAPI } from "../src/core/extensions/index.js";
-import { createHarness, type Harness } from "./suite/harness.js";
+import type { ExtensionAPI } from "../src/core/extensions/index.ts";
+import { createHarness, type Harness } from "./suite/harness.ts";
 
 describe("ExtensionAPI.getCommands", () => {
 	let harness: Harness | undefined;

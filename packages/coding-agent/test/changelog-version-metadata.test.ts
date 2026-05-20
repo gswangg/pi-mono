@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { type ChangelogEntry, getNewEntries } from "../src/utils/changelog.js";
+import { type ChangelogEntry, getNewEntries } from "../src/utils/changelog.ts";
 
 const entry = (major: number, minor: number, patch: number): ChangelogEntry => ({
 	major,

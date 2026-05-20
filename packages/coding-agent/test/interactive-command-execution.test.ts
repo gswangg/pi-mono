@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
 	type InteractiveCommandHandlers,
 	tryHandleInteractiveCommand,
-} from "../src/modes/interactive/execute-command.js";
+} from "../src/modes/interactive/execute-command.ts";
 
 function createHandlers(): InteractiveCommandHandlers & { calls: string[] } {
 	const calls: string[] = [];

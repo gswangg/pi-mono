@@ -1,5 +1,5 @@
-import { APP_NAME } from "../config.js";
-import { createSyntheticSourceInfo, type SourceInfo } from "./source-info.js";
+import { APP_NAME } from "../config.ts";
+import { createSyntheticSourceInfo, type SourceInfo } from "./source-info.ts";
 
 export type SlashCommandSource = "builtin" | "extension" | "prompt" | "skill";
 

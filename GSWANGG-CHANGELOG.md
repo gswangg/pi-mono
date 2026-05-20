@@ -6,6 +6,19 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.75.4+gswangg.1] - 2026-05-20
+
+Based on upstream [0.75.4].
+
+### Merged from upstream
+
+- Synced upstream release `v0.75.4`, including npm install/release supply-chain hardening, generated CLI shrinkwrap support, TypeScript relative import normalization, update notes, abort restoration fixes, HTTP idle timeout fixes, theme detection improvements, and provider/cache compatibility fixes inherited from upstream packages.
+
+### Changed
+
+- Bumped the active fork package version from `0.75.3+gswangg.1` to `0.75.4+gswangg.1`.
+- Kept the fork-only Linux x64/arm64 optional native dependency pins in the root package manifest so clean Linux CI installs can build Tailwind/web-ui and Rollup-dependent packages.
+
 ## [0.75.3+gswangg.1] - 2026-05-18
 
 Based on upstream [0.75.3].
