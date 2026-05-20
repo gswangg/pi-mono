@@ -6,6 +6,15 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.75.4+gswangg.2] - 2026-05-20
+
+Based on upstream [0.75.4].
+
+### Changed
+
+- Updated the Anthropic OAuth Claude Code compatibility user-agent from `claude-cli/2.1.75` to `claude-cli/2.1.143`.
+- Bumped the active fork package version from `0.75.4+gswangg.1` to `0.75.4+gswangg.2`.
+
 ## [0.75.4+gswangg.1] - 2026-05-20
 
 Based on upstream [0.75.4].
