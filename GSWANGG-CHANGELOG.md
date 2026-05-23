@@ -6,6 +6,20 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.75.5+gswangg.1] - 2026-05-23
+
+Based on upstream [0.75.5].
+
+### Merged from upstream
+
+- Synced upstream release `v0.75.5`, including async tool control flow cleanup, read tool collapsed-by-default rendering, pinned git update reconciliation, Bedrock Smithy HTTP handler dependency declaration, Anthropic-compatible adaptive thinking aliases, OAuth device-code callback cleanup, Bun binary clipboard sidecar shipping, OpenCode session headers, footer home abbreviation safety, HTML export attribute escaping, and generated model/image-model refreshes.
+
+### Changed
+
+- Bumped the active fork package version from `0.75.4+gswangg.2` to `0.75.5+gswangg.1`.
+- Kept the Anthropic OAuth Claude Code compatibility user-agent at `claude-cli/2.1.143`.
+- Kept the fork-only Linux x64/arm64 optional native dependency pins in the root package manifest so clean Linux CI installs can build Tailwind/web-ui and Rollup-dependent packages.
+
 ## [0.75.4+gswangg.2] - 2026-05-20
 
 Based on upstream [0.75.4].
