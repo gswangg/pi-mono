@@ -6,6 +6,21 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.76.0+gswangg.1] - 2026-05-27
+
+Based on upstream [0.76.0].
+
+### Merged from upstream
+
+- Synced upstream release `v0.76.0`, including explicit session id naming, Codex SSE header stall timeout, Codex WebSocket timeouts, RPC bash `excludeFromContext` flag, JetBrains terminal capabilities, hyphenated Codex session header, ASCII punctuation/Intl.Segmenter word boundary fixes, hidden provider 429 retry disablement, user image token counting in context estimates, Poolside context overflow detection, Codex Spark context window correction, self-update age gate bypass, user ordered-list marker preservation, workspace dist resolution for internal packages, and various provider/test stability fixes.
+
+### Changed
+
+- Bumped the active fork package version from `0.75.5+gswangg.1` to `0.76.0+gswangg.1`.
+- Kept the Anthropic OAuth Claude Code compatibility user-agent at `claude-cli/2.1.143`.
+- Reconciled fork's auto-retry classifier with upstream's new `_isNonRetryableProviderLimitError` gate: keep the fork's `bad control character|json.*position` JSON-parse retry patterns while honoring the new non-retryable provider-limit short-circuit.
+- Kept the fork-only Linux x64/arm64 optional native dependency pins in the root package manifest so clean Linux CI installs can build Tailwind/web-ui and Rollup-dependent packages.
+
 ## [0.75.5+gswangg.1] - 2026-05-23
 
 Based on upstream [0.75.5].
