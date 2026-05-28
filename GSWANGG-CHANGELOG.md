@@ -6,6 +6,20 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.77.0+gswangg.1] - 2026-05-28
+
+Based on upstream [0.77.0].
+
+### Merged from upstream
+
+- Synced upstream release `v0.77.0`, including the exclude-tools option, scoped custom session dir lookups, extension cleanup/terminal restore on signal exits, synthetic Responses message id fixes, Codex replay message id dedup, Kimi/Xiaomi/Opus/GPT thinking metadata updates, CI-published packages, clipboard native addon update, harness tool registry semantics, Anthropic empty thinking signature replay fix, explicit config env references, session work abort during dispose, OpenRouter DeepSeek V4 xhigh reasoning fix, and startup timing attribution fix.
+
+### Changed
+
+- Bumped the active fork package version from `0.76.0+gswangg.1` to `0.77.0+gswangg.1`.
+- Kept the Anthropic OAuth Claude Code compatibility user-agent at `claude-cli/2.1.143`.
+- Kept the fork-only Linux x64/arm64 optional native dependency pins in the root package manifest so clean Linux CI installs can build Tailwind/web-ui and Rollup-dependent packages.
+
 ## [0.76.0+gswangg.1] - 2026-05-27
 
 Based on upstream [0.76.0].
