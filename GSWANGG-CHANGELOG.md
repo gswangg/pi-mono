@@ -6,6 +6,20 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.78.0+gswangg.1] - 2026-05-29
+
+Based on upstream [0.78.0].
+
+### Merged from upstream
+
+- Synced upstream release `v0.78.0`, including hyperlinked file paths in tool titles, early-input buffering before the prompt loop, exported CLI argument parser, explicit-provider-API-key requirement, OpenCode Kimi reasoning parameter handling, Codex SSE body read abort, GitLab Duo thinking metadata fix, OpenRouter Kimi K2.6 developer role fix, ANSI wrapping stack overflow fix, tmux OSC 8 hyperlink forwarding, clipboard binary archive dependency sync, resume-session hint cleanup, hardware cursor doc clarification, and release npm age-gate override documentation.
+
+### Changed
+
+- Bumped the active fork package version from `0.77.0+gswangg.1` to `0.78.0+gswangg.1`.
+- Kept the Anthropic OAuth Claude Code compatibility user-agent at `claude-cli/2.1.143`.
+- Kept the fork-only Linux x64/arm64 optional native dependency pins in the root package manifest so clean Linux CI installs can build Tailwind/web-ui and Rollup-dependent packages.
+
 ## [0.77.0+gswangg.1] - 2026-05-28
 
 Based on upstream [0.77.0].
