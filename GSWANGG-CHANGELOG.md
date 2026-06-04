@@ -6,6 +6,21 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.78.1+gswangg.1] - 2026-06-04
+
+Based on upstream [0.78.1].
+
+### Merged from upstream
+
+- Synced upstream release `v0.78.1`, including the new `ExtensionBindings.mode` plumbing (`tui`/`rpc`/`print`), Ant Ling/MiniMax-M3/ZAI Coding Plan China providers, HTML export URL sanitization, hardened OAuth browser launch handling, hardened git package install paths, scoped auth-file mode on creation, moved temporary extension cache, removed stale Codex models, Gondolin example/containerization guide additions, SECURITY.md, and a refreshed generated model/image-model list.
+
+### Changed
+
+- Bumped the active fork package version from `0.78.0+gswangg.1` to `0.78.1+gswangg.1`.
+- Reconciled interactive-mode `bindExtensions` call so both upstream's new `mode: "tui"` and the fork's `executeCommand` / `submitSkill` handlers coexist on the same binding.
+- Kept the Anthropic OAuth Claude Code compatibility user-agent at `claude-cli/2.1.143`.
+- Kept the fork-only Linux x64/arm64 optional native dependency pins in the root package manifest so clean Linux CI installs can build Tailwind/web-ui and Rollup-dependent packages.
+
 ## [0.78.0+gswangg.1] - 2026-05-29
 
 Based on upstream [0.78.0].
