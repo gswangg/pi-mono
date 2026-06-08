@@ -14,6 +14,7 @@ export interface InteractiveCommandHandlers {
 	showUserMessageSelector(): void;
 	handleCloneCommand(): Promise<void>;
 	showTreeSelector(): void;
+	showTrustSelector(): void;
 	showOAuthSelector(mode: "login" | "logout"): Promise<void>;
 	handleClearCommand(): Promise<void>;
 	handleCompactCommand(customInstructions?: string): Promise<void>;
@@ -97,6 +98,11 @@ export async function tryHandleInteractiveCommand(
 	}
 	if (text === "/tree") {
 		handlers.showTreeSelector();
+		handlers.clearEditor();
+		return true;
+	}
+	if (text === "/trust") {
+		handlers.showTrustSelector();
 		handlers.clearEditor();
 		return true;
 	}

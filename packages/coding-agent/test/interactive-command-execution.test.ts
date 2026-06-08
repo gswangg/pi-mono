@@ -53,6 +53,9 @@ function createHandlers(): InteractiveCommandHandlers & { calls: string[] } {
 		showTreeSelector: vi.fn(() => {
 			calls.push("showTreeSelector");
 		}),
+		showTrustSelector: vi.fn(() => {
+			calls.push("showTrustSelector");
+		}),
 		showOAuthSelector: vi.fn(async (mode: "login" | "logout") => {
 			calls.push(`showOAuthSelector:${mode}`);
 		}),

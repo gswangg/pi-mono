@@ -6,6 +6,21 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.79.0+gswangg.1] - 2026-06-08
+
+Based on upstream [0.79.0].
+
+### Merged from upstream
+
+- Synced upstream release `v0.79.0`, including extension project trust decisions (`/trust`), security advisories in the prompt widget, neutralized compaction summarization prompts, response-driven keyboard protocol fallback, persistent implicit project trust on reload, exported RPC extension UI types, OpenAI Responses developer-role compat, autocomplete picker re-query on cursor movement, prompt history cursor positioning, package asset path helpers export, removed stale hooks export, and documentation updates (security model, tmux requirement).
+
+### Changed
+
+- Bumped the active fork package version from `0.78.1+gswangg.1` to `0.79.0+gswangg.1`.
+- Extended the fork's `tryHandleInteractiveCommand` dispatcher and editor submit handler to route the new upstream `/trust` slash command through the unified `executeCommand` path, so fork integrations (extensions, RPC, tests) see `/trust` like every other built-in command.
+- Kept the Anthropic OAuth Claude Code compatibility user-agent at `claude-cli/2.1.143`.
+- Kept the fork-only Linux x64/arm64 optional native dependency pins in the root package manifest so clean Linux CI installs can build Tailwind/web-ui and Rollup-dependent packages.
+
 ## [0.78.1+gswangg.1] - 2026-06-04
 
 Based on upstream [0.78.1].
