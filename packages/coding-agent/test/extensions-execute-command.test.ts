@@ -69,6 +69,7 @@ describe("ExtensionAPI.executeCommand", () => {
 			getContextUsage: () => undefined,
 			compact: () => {},
 			getSystemPrompt: () => "",
+			isProjectTrusted: () => true,
 		};
 
 		runner.bindCore(actions, contextActions);

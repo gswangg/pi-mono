@@ -6,6 +6,20 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.79.1+gswangg.1] - 2026-06-09
+
+Based on upstream [0.79.1].
+
+### Merged from upstream
+
+- Synced upstream release `v0.79.1`, including improved project approval settings, experimental feature guard, OAuth login prompt row stabilization, prompt template argument defaults, autocomplete trigger characters, ephemeral `/new` session handling, Claude Fable 5 metadata, OpenCode max-tokens mapping, z.ai thinking payload, simplified `--help`/`--version` handling, Azure context-window/maxTokens corrections, Riverflow image model rename, and other generated model/image-model regenerations.
+
+### Changed
+
+- Bumped the active fork package version from `0.79.0+gswangg.1` to `0.79.1+gswangg.1`.
+- Kept the Anthropic OAuth Claude Code compatibility user-agent at `claude-cli/2.1.143`.
+- Kept the fork-only Linux x64/arm64 optional native dependency pins in the root package manifest so clean Linux CI installs can build Tailwind/web-ui and Rollup-dependent packages.
+
 ## [0.79.0+gswangg.1] - 2026-06-08
 
 Based on upstream [0.79.0].

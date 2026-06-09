@@ -74,6 +74,7 @@ describe("ExtensionAPI skill helpers", () => {
 			getContextUsage: () => undefined,
 			compact: () => {},
 			getSystemPrompt: () => "",
+			isProjectTrusted: () => true,
 		};
 
 		runner.bindCore(actions, contextActions);
