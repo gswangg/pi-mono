@@ -6,6 +6,21 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.79.2+gswangg.1] - 2026-06-12
+
+Based on upstream [0.79.2].
+
+### Merged from upstream
+
+- Synced upstream release `v0.79.2`, including the experimental first-time setup flow (skipped for forks), parenthesized context overflow detection, normalized generated model costs, GPT-5 context window corrections, late tool progress update handling, fork path rechaining without labels, authenticated slash model id resolution, slash-separated fuzzy filter tokens, missing export theme handling, custom fallback thinking preservation, relaxed Codex SSE header timeout, Anthropic refusal detail preservation, WezTerm Kitty image visibility, and unordered user list marker preservation.
+
+### Changed
+
+- Bumped the active fork package version from `0.79.1+gswangg.1` to `0.79.2+gswangg.1`.
+- Upstream's own `anthropic-adaptive-thinking-models` test update (explicit Claude Fable 5 expectations) merged cleanly over the fork's earlier regex broadening.
+- Kept the Anthropic OAuth Claude Code compatibility user-agent at `claude-cli/2.1.143`.
+- Kept the fork-only Linux x64/arm64 optional native dependency pins in the root package manifest so clean Linux CI installs can build Tailwind/web-ui and Rollup-dependent packages.
+
 ## [0.79.1+gswangg.1] - 2026-06-09
 
 Based on upstream [0.79.1].
