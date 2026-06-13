@@ -2,14 +2,11 @@ import { describe, expect, it } from "vitest";
 import { getModels, getProviders } from "../src/models.ts";
 import type { Api, Model } from "../src/types.ts";
 
-const EXPECTED_CURRENT_ADAPTIVE_THINKING_MODELS = [
-	"anthropic/claude-fable-5",
-	"anthropic/claude-opus-4-8",
-	"opencode/claude-fable-5",
-	"opencode/claude-opus-4-8",
-	"vercel-ai-gateway/anthropic/claude-fable-5",
-	"vercel-ai-gateway/anthropic/claude-opus-4.8",
-];
+// Restrict the required-present snapshot to anthropic-native built-ins. Third-party
+// catalogs (opencode, vercel-ai-gateway) regenerate from live model lists and have
+// dropped/re-added claude-fable-5 between releases, which makes a hardcoded multi-provider
+// snapshot drift-prone. arrayContaining stays forward-compatible if those return.
+const EXPECTED_CURRENT_ADAPTIVE_THINKING_MODELS = ["anthropic/claude-fable-5", "anthropic/claude-opus-4-8"];
 
 function getAllModels(): Model<Api>[] {
 	return getProviders().flatMap((provider) => getModels(provider) as Model<Api>[]);
