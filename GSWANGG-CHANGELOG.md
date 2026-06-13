@@ -6,6 +6,20 @@ All notable changes to the `gswangg/pi-mono` fork, on top of upstream `badlogic/
 
 No unreleased fork-only changes.
 
+## [0.79.3+gswangg.1] - 2026-06-13
+
+Based on upstream [0.79.3].
+
+### Merged from upstream
+
+- Synced upstream release `v0.79.3`, a small patch restoring Codex context limits inherited from `@earendil-works/pi-ai`.
+
+### Changed
+
+- Bumped the active fork package version from `0.79.2+gswangg.1` to `0.79.3+gswangg.1`.
+- Kept the Anthropic OAuth Claude Code compatibility user-agent at `claude-cli/2.1.143`.
+- Kept the fork-only Linux x64/arm64 optional native dependency pins in the root package manifest so clean Linux CI installs can build Tailwind/web-ui and Rollup-dependent packages.
+
 ## [0.79.2+gswangg.1] - 2026-06-12
 
 Based on upstream [0.79.2].
